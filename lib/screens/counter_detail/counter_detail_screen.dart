@@ -8,6 +8,8 @@ import 'package:uuid/uuid.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
 import '../../providers/entries_provider.dart';
+import 'entry_edit_sheet.dart';
+import 'history_entry_tile.dart';
 
 const _uuid = Uuid();
 
@@ -148,6 +150,17 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
       time.minute,
     );
     _valueController.text = combined.toIso8601String();
+  }
+
+  void _onEntryTap(CounterEntry entry) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => EntryEditSheet(
+        entry: entry,
+        counterId: widget.counterId,
+      ),
+    );
   }
 
   bool _showStepButtons(Counter counter) {
@@ -318,6 +331,9 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
         }
 
         final lastEntry = lastEntryAsync.valueOrNull;
+        final entriesAsync =
+            ref.watch(entriesForCounterProvider(widget.counterId));
+        final entries = entriesAsync.valueOrNull ?? [];
 
         return Scaffold(
           body: CustomScrollView(
@@ -358,14 +374,20 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 ),
               ),
 
-              // 5. History entries placeholder (Step 13)
+              // 5. History entries
               SliverList.builder(
-                itemCount: 1,
-                itemBuilder: (context, index) =>
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('History coming in Step 13'),
-                    ),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  final previousEntry =
+                      index + 1 < entries.length ? entries[index + 1] : null;
+                  return HistoryEntryTile(
+                    entry: entry,
+                    counter: counter,
+                    previousEntry: previousEntry,
+                    onTap: () => _onEntryTap(entry),
+                  );
+                },
               ),
             ],
           ),
