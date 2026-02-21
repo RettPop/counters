@@ -33,7 +33,7 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
     return into(counters).insert(_domainToCompanion(c));
   }
 
-  Future<void> updateCounter(domain.Counter c) {
+  Future<int> updateCounter(domain.Counter c) {
     return (update(counters)..where((t) => t.id.equals(c.id))).write(
       _domainToCompanion(c).copyWith(
         updatedAt: Value(DateTime.now()),
@@ -61,12 +61,16 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       description: row.description,
       behaviorType: domain.BehaviorType.values.byName(row.behaviorType),
       dataType: domain.DataType.values.byName(row.dataType),
-      tags: List.unmodifiable(
-        (jsonDecode(row.tags) as List).cast<String>(),
-      ),
+      tags: List.unmodifiable(() {
+        try {
+          return (jsonDecode(row.tags) as List).cast<String>();
+        } catch (_) {
+          return const <String>[];
+        }
+      }()),
       changeStep: row.changeStep,
       backgroundColor: row.backgroundColor,
-      autoSaveDelay: row.autoSaveDelay,
+      autoSave: row.autoSave,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,
@@ -83,7 +87,7 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       tags: Value(jsonEncode(c.tags)),
       changeStep: Value(c.changeStep),
       backgroundColor: Value(c.backgroundColor),
-      autoSaveDelay: Value(c.autoSaveDelay),
+      autoSave: Value(c.autoSave),
       createdAt: Value(c.createdAt),
       updatedAt: Value(c.updatedAt),
       deletedAt: Value(c.deletedAt),

@@ -14,7 +14,7 @@ class Counter {
     required List<String> tags,
     this.changeStep,
     this.backgroundColor,
-    this.autoSaveDelay = false,
+    this.autoSave = false,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -29,7 +29,7 @@ class Counter {
   final String? changeStep;
   // Stores color as ARGB integer (same encoding as Flutter's Color.value).
   final int? backgroundColor;
-  final bool autoSaveDelay;
+  final bool autoSave;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -43,7 +43,7 @@ class Counter {
     List<String>? tags,
     Object? changeStep = kSentinel,
     Object? backgroundColor = kSentinel,
-    bool? autoSaveDelay,
+    bool? autoSave,
     DateTime? createdAt,
     DateTime? updatedAt,
     Object? deletedAt = kSentinel,
@@ -60,7 +60,7 @@ class Counter {
       backgroundColor: backgroundColor == kSentinel
           ? this.backgroundColor
           : backgroundColor as int?,
-      autoSaveDelay: autoSaveDelay ?? this.autoSaveDelay,
+      autoSave: autoSave ?? this.autoSave,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt:

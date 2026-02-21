@@ -31,7 +31,7 @@ void main() {
         tags: tags,
         changeStep: changeStep,
         backgroundColor: backgroundColor,
-        autoSaveDelay: false,
+        autoSave: false,
         createdAt: createdAt ?? now,
         updatedAt: now,
       );
@@ -50,7 +50,7 @@ void main() {
       expect(fetched.tags, ['fitness', 'daily']);
       expect(fetched.backgroundColor, 0xFFFF5733);
       expect(fetched.changeStep, '1');
-      expect(fetched.autoSaveDelay, false);
+      expect(fetched.autoSave, false);
     });
 
     test('tags list returned from DB is unmodifiable', () async {
@@ -82,14 +82,15 @@ void main() {
       expect(result, isNull);
     });
 
-    test('updateCounter updates name', () async {
+    test('updateCounter updates name and returns rows affected', () async {
       await db.countersDao.insertCounter(makeCounter());
 
       final updated = makeCounter().copyWith(
         name: 'Updated Name',
         updatedAt: now.add(const Duration(hours: 1)),
       );
-      await db.countersDao.updateCounter(updated);
+      final rowsAffected = await db.countersDao.updateCounter(updated);
+      expect(rowsAffected, 1);
 
       final fetched = await db.countersDao.getCounterById('c-1');
       expect(fetched!.name, 'Updated Name');

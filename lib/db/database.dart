@@ -18,5 +18,5 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'counters');
+  return driftDatabase(name: 'counters_db');
 }

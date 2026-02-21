@@ -9,7 +9,7 @@ class Counters extends Table {
   TextColumn get tags => text().withDefault(const Constant('[]'))();
   TextColumn get changeStep => text().nullable()();
   IntColumn get backgroundColor => integer().nullable()();
-  BoolColumn get autoSaveDelay =>
+  BoolColumn get autoSave =>
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
