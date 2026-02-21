@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../models/models.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/photos_provider.dart';
 
 /// Bottom sheet for editing a [CounterEntry]'s comment retroactively.
 class EntryEditSheet extends ConsumerStatefulWidget {
@@ -60,8 +66,57 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
     }
   }
 
+  Future<void> _pickFromGallery() => _pickPhoto(ImageSource.gallery);
+  Future<void> _pickFromCamera() => _pickPhoto(ImageSource.camera);
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source, imageQuality: 85);
+    if (picked == null) return;
+
+    // Copy to app documents directory
+    final appDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${appDir.path}/entry_photos');
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    final ext = picked.path.split('.').last;
+    final uuid = const Uuid().v4();
+    final dest = '${photosDir.path}/$uuid.$ext';
+    await File(picked.path).copy(dest);
+
+    final now = DateTime.now();
+    final photo = EntryPhoto(
+      id: uuid,
+      entryId: widget.entry.id,
+      localPath: dest,
+      createdAt: now,
+    );
+
+    if (!mounted) return;
+    await ref
+        .read(photoNotifierProvider(widget.entry.id).notifier)
+        .addPhoto(photo);
+  }
+
+  Future<void> _deletePhoto(EntryPhoto photo) async {
+    // Soft-delete in DB
+    await ref
+        .read(photoNotifierProvider(photo.entryId).notifier)
+        .deletePhoto(photo.id);
+    // Delete file from disk
+    final file = File(photo.localPath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final photosAsync = ref.watch(photosForEntryProvider(widget.entry.id));
+    final photos = photosAsync.valueOrNull ?? [];
+
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -104,10 +159,65 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Photos placeholder
-              const Text(
-                'Photos coming in Step 16',
-                style: TextStyle(color: Colors.grey),
+              // Photos section
+              Text(
+                'Photos',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 80,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: photos.length + 1, // +1 for add button
+                  itemBuilder: (context, index) {
+                    if (index == photos.length) {
+                      return _AddPhotoButton(
+                        onGallery: _pickFromGallery,
+                        onCamera: _pickFromCamera,
+                      );
+                    }
+                    final photo = photos[index];
+                    return Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(photo.localPath),
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 72,
+                                height: 72,
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => _deletePhoto(photo),
+                            child: const CircleAvatar(
+                              radius: 10,
+                              backgroundColor: Colors.black54,
+                              child: Icon(
+                                Icons.close,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -126,6 +236,54 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A compact button that shows "From gallery" and "Camera" options.
+class _AddPhotoButton extends StatelessWidget {
+  const _AddPhotoButton({
+    required this.onGallery,
+    required this.onCamera,
+  });
+
+  final VoidCallback onGallery;
+  final VoidCallback onCamera;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 34,
+            child: OutlinedButton.icon(
+              onPressed: onGallery,
+              icon: const Icon(Icons.photo_library_outlined, size: 16),
+              label: const Text('Gallery', style: TextStyle(fontSize: 12)),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: 34,
+            child: OutlinedButton.icon(
+              onPressed: onCamera,
+              icon: const Icon(Icons.camera_alt_outlined, size: 16),
+              label: const Text('Camera', style: TextStyle(fontSize: 12)),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

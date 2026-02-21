@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../models/models.dart';
+import '../../providers/photos_provider.dart';
 
 final _dateFormat = DateFormat('dd MMM yyyy, HH:mm');
 
@@ -99,6 +102,10 @@ class HistoryEntryTile extends ConsumerWidget {
     final isEventCounter = counter.behaviorType == BehaviorType.event;
     final hasComment =
         entry.comment != null && entry.comment!.isNotEmpty;
+
+    // Watch photos for this entry
+    final photosAsync = ref.watch(photosForEntryProvider(entry.id));
+    final photos = photosAsync.valueOrNull ?? [];
 
     // Duration since previous entry
     String? durationStr;
@@ -197,6 +204,37 @@ class HistoryEntryTile extends ConsumerWidget {
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+            // Photo thumbnail strip
+            if (photos.isNotEmpty)
+              SizedBox(
+                height: 52,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: photos.length,
+                  itemBuilder: (context, i) {
+                    final photo = photos[i];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 4, top: 4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.file(
+                          File(photo.localPath),
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 48,
+                            height: 48,
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.broken_image, size: 20),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
           ],
