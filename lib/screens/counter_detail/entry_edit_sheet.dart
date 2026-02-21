@@ -105,6 +105,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
     await ref
         .read(photoNotifierProvider(photo.entryId).notifier)
         .deletePhoto(photo.id);
+    if (!mounted) return;
     // Delete file from disk
     final file = File(photo.localPath);
     if (await file.exists()) {
