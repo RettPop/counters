@@ -24,13 +24,18 @@ flutter test test/widget_test.dart
 
 ## Architecture
 
-The app lives entirely in `lib/main.dart` with three classes:
+`lib/main.dart` bootstraps the app with a `ProviderScope` wrapping `MaterialApp.router`, which is configured with a `GoRouter` instance. All routes are declared in that router.
 
-- **MyApp** — StatelessWidget root; configures MaterialApp and routes to MyHomePage
-- **MyHomePage** — StatefulWidget; holds the page title and creates `_MyHomePageState`
-- **_MyHomePageState** — manages `_counter` state and renders the Scaffold (AppBar, Column with counter display, FloatingActionButton)
+Directory layout:
 
-State management is local (`setState`); there is no external state library.
+- `lib/screens/` — one sub-folder per screen (e.g. `counter_list/`, `counter_detail/`)
+- `lib/db/` — Drift database class and generated code for SQLite persistence
+- `lib/models/` — plain Dart model classes (Drift table companions and domain objects)
+- `lib/providers/` — Riverpod providers (generated via `riverpod_annotation` + `build_runner`)
+
+State management uses **Riverpod** (`flutter_riverpod` + `riverpod_annotation`); there is no local `setState` for business logic.
+
+Persistence is handled by **drift** (SQLite) via `drift_flutter` and `sqlite3_flutter_libs`.
 
 ## Linting
 
