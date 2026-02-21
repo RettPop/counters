@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,17 @@ import '../../providers/counters_provider.dart';
 import '../../providers/entries_provider.dart';
 
 const _uuid = Uuid();
+
+String _formatValue(double val, DataType dataType) {
+  if (dataType == DataType.integer) {
+    return val.truncate().toString();
+  }
+  // float: up to 2 decimals, trim trailing zeros
+  String s = val.toStringAsFixed(2);
+  s = s.replaceAll(RegExp(r'0+$'), '');
+  s = s.replaceAll(RegExp(r'\.$'), '');
+  return s;
+}
 
 class CounterDetailScreen extends ConsumerStatefulWidget {
   const CounterDetailScreen({super.key, required this.counterId});
@@ -21,15 +34,34 @@ class CounterDetailScreen extends ConsumerStatefulWidget {
 
 class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
   final TextEditingController _valueController = TextEditingController();
+  Timer? _autoSaveTimer;
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _valueController.dispose();
     super.dispose();
   }
 
   void _onValueChanged(String value) {
-    // Placeholder for auto-save timer (Step 12)
+    final counterAsync = ref.read(counterByIdProvider(widget.counterId));
+    final counter = counterAsync.valueOrNull;
+    if (counter?.autoSave != true) return;
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      if (_valueController.text.trim().isNotEmpty) {
+        _logEntry().then((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Saved'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        });
+      }
+    });
   }
 
   Future<void> _logEntry() async {
@@ -50,6 +82,46 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
         .addEntry(entry);
     ref.invalidate(lastEntryProvider(widget.counterId));
     _valueController.clear();
+  }
+
+  Future<void> _logEventEntry(EventType eventType) async {
+    final value = _valueController.text.trim();
+    final now = DateTime.now();
+    final entry = CounterEntry(
+      id: _uuid.v4(),
+      counterId: widget.counterId,
+      eventType: eventType,
+      value: value.isEmpty ? null : value,
+      recordedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await ref
+        .read(entryNotifierProvider(widget.counterId).notifier)
+        .addEntry(entry);
+    ref.invalidate(lastEntryProvider(widget.counterId));
+  }
+
+  Future<void> _handleStep(Counter counter, CounterEntry? lastEntry,
+      double multiplier) async {
+    final step = double.parse(counter.changeStep!);
+    final lastValue = lastEntry?.numericValue ?? 0;
+    final newValue = lastValue + (step * multiplier);
+    final formatted = _formatValue(newValue, counter.dataType);
+    final now = DateTime.now();
+    final entry = CounterEntry(
+      id: _uuid.v4(),
+      counterId: widget.counterId,
+      eventType: EventType.value,
+      value: formatted,
+      recordedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await ref
+        .read(entryNotifierProvider(widget.counterId).notifier)
+        .addEntry(entry);
+    ref.invalidate(lastEntryProvider(widget.counterId));
   }
 
   Future<void> _pickDateTime() async {
@@ -75,6 +147,13 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
       time.minute,
     );
     _valueController.text = combined.toIso8601String();
+  }
+
+  bool _showStepButtons(Counter counter) {
+    if (counter.changeStep == null) return false;
+    if (double.tryParse(counter.changeStep!) == null) return false;
+    return counter.dataType == DataType.integer ||
+        counter.dataType == DataType.float;
   }
 
   Widget _buildInputSection(Counter counter, CounterEntry? lastEntry) {
@@ -148,6 +227,59 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
             ),
           ],
           const SizedBox(height: 16),
+
+          // Step buttons (numeric types with changeStep)
+          if (_showStepButtons(counter)) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.remove),
+                    label: Text('−${counter.changeStep}'),
+                    onPressed: () => _handleStep(counter, lastEntry, -1.0),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: Text('+${counter.changeStep}'),
+                    onPressed: () => _handleStep(counter, lastEntry, 1.0),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Event buttons (event behavior type)
+          if (counter.behaviorType == BehaviorType.event) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.tonal(
+                    onPressed: () => _logEventEntry(EventType.start),
+                    child: const Text('Start'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.tonal(
+                    onPressed: () => _logEventEntry(EventType.continueEvent),
+                    child: const Text('Continue'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.tonal(
+                    onPressed: () => _logEventEntry(EventType.finish),
+                    child: const Text('Finish'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Log button
           SizedBox(
