@@ -26,8 +26,12 @@ String formatDuration(Duration d) {
 }
 
 /// Formats a numeric diff value with sign, trimming unnecessary decimals.
-/// Returns e.g. "+3", "-1.5", "+0.25".
-String formatDiff(double diff) {
+/// Returns e.g. "+3", "-1.5", "+0.25". Returns null if either value is null
+/// or the result is not finite (NaN / Infinity).
+String? formatDiff(double? currentNum, double? prevNum) {
+  if (currentNum == null || prevNum == null) return null;
+  final diff = currentNum - prevNum;
+  if (!diff.isFinite) return null;
   final sign = diff >= 0 ? '+' : '';
   if (diff % 1 == 0) {
     return '$sign${diff.toInt()}';
@@ -105,14 +109,11 @@ class HistoryEntryTile extends ConsumerWidget {
     }
 
     // Numeric diff
-    String? diffStr;
-    double? diffValue;
     final currentNum = entry.numericValue;
     final prevNum = previousEntry?.numericValue;
-    if (currentNum != null && prevNum != null) {
-      diffValue = currentNum - prevNum;
-      diffStr = formatDiff(diffValue);
-    }
+    final diffStr = formatDiff(currentNum, prevNum);
+    final double? diffValue =
+        (currentNum != null && prevNum != null) ? currentNum - prevNum : null;
 
     // Comment truncated to 50 chars
     String? commentPreview;
@@ -130,10 +131,19 @@ class HistoryEntryTile extends ConsumerWidget {
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              entry.value ?? '(no value)',
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
+            entry.value != null
+                ? Text(
+                    entry.value!,
+                    style: textTheme.bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  )
+                : Text(
+                    '(no value)',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
             if (isEventCounter) ...[
               const SizedBox(width: 8),
               _EventBadge(eventType: entry.eventType),
@@ -221,11 +231,11 @@ class _EventBadgeIcon extends StatelessWidget {
       case EventType.start:
         icon = Icons.play_circle_outline;
       case EventType.continueEvent:
-        icon = Icons.pause_circle_outline;
+        icon = Icons.redo;
       case EventType.finish:
-        icon = Icons.stop_circle_outlined;
+        icon = Icons.check_circle_outline;
       case EventType.value:
-        icon = Icons.fiber_manual_record_outlined;
+        icon = Icons.radio_button_checked;
     }
     return Icon(icon, color: color, size: 24);
   }

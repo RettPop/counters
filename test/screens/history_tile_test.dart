@@ -48,34 +48,45 @@ void main() {
 
   group('formatDiff', () {
     test('positive integer shows + prefix', () {
-      expect(formatDiff(3.0), '+3');
-      expect(formatDiff(100.0), '+100');
+      expect(formatDiff(3.0, 0.0), '+3');
+      expect(formatDiff(100.0, 0.0), '+100');
     });
 
     test('negative integer shows no + prefix', () {
-      expect(formatDiff(-1.0), '-1');
-      expect(formatDiff(-50.0), '-50');
+      expect(formatDiff(-1.0, 0.0), '-1');
+      expect(formatDiff(-50.0, 0.0), '-50');
     });
 
-    test('zero is formatted with + prefix as integer', () {
-      expect(formatDiff(0.0), '+0');
+    test('zero diff is formatted with + prefix as integer', () {
+      expect(formatDiff(5.0, 5.0), '+0');
     });
 
     test('decimal values trim trailing zeros', () {
-      expect(formatDiff(3.5), '+3.5');
-      expect(formatDiff(-1.25), '-1.25');
+      expect(formatDiff(3.5, 0.0), '+3.5');
+      expect(formatDiff(-1.25, 0.0), '-1.25');
       // 3.10 trimmed to 3.1
-      expect(formatDiff(3.10), '+3.1');
+      expect(formatDiff(3.10, 0.0), '+3.1');
     });
 
     test('values that round to integer are shown as integer', () {
-      // 2.00 → 2 (exact integer test via modulo)
-      expect(formatDiff(2.0), '+2');
+      // diff of 2.0 → '+2'
+      expect(formatDiff(2.0, 0.0), '+2');
     });
 
     test('small decimal values are handled', () {
-      expect(formatDiff(0.5), '+0.5');
-      expect(formatDiff(-0.25), '-0.25');
+      expect(formatDiff(0.5, 0.0), '+0.5');
+      expect(formatDiff(-0.25, 0.0), '-0.25');
+    });
+
+    test('returns null when either argument is null', () {
+      expect(formatDiff(null, 1.0), isNull);
+      expect(formatDiff(1.0, null), isNull);
+      expect(formatDiff(null, null), isNull);
+    });
+
+    test('returns null for non-finite results', () {
+      expect(formatDiff(double.infinity, 0.0), isNull);
+      expect(formatDiff(double.nan, 0.0), isNull);
     });
   });
 }
