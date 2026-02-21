@@ -59,8 +59,14 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       id: row.id,
       name: row.name,
       description: row.description,
-      behaviorType: domain.BehaviorType.values.byName(row.behaviorType),
-      dataType: domain.DataType.values.byName(row.dataType),
+      behaviorType: domain.BehaviorType.values.firstWhere(
+        (e) => e.name == row.behaviorType,
+        orElse: () => domain.BehaviorType.value,
+      ),
+      dataType: domain.DataType.values.firstWhere(
+        (e) => e.name == row.dataType,
+        orElse: () => domain.DataType.freeText,
+      ),
       tags: List.unmodifiable(() {
         try {
           return (jsonDecode(row.tags) as List).cast<String>();

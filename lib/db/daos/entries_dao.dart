@@ -66,7 +66,10 @@ class EntriesDao extends DatabaseAccessor<AppDatabase>
     return domain.CounterEntry(
       id: row.id,
       counterId: row.counterId,
-      eventType: domain.EventType.values.byName(row.eventType),
+      eventType: domain.EventType.values.firstWhere(
+        (e) => e.name == row.eventType,
+        orElse: () => domain.EventType.value,
+      ),
       value: row.value,
       comment: row.comment,
       recordedAt: row.recordedAt,
