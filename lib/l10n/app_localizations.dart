@@ -397,6 +397,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get noColorOption;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String errorGeneric(String message);
+
+  /// No description provided for @errorCounterNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter not found'**
+  String get errorCounterNotFound;
 }
 
 class _AppLocalizationsDelegate

@@ -326,13 +326,13 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text('Error: $error')),
+        body: Center(child: Text(l10n.errorGeneric(error.toString()))),
       ),
       data: (counter) {
         if (counter == null) {
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: Text('Counter not found')),
+            body: Center(child: Text(l10n.errorCounterNotFound)),
           );
         }
 

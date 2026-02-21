@@ -161,4 +161,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noColorOption => 'None';
+
+  @override
+  String errorGeneric(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get errorCounterNotFound => 'Counter not found';
 }

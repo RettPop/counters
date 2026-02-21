@@ -157,5 +157,14 @@
   "@editEntryTitle": {},
 
   "noColorOption": "None",
-  "@noColorOption": {}
+  "@noColorOption": {},
+
+  "errorGeneric": "Error: {message}",
+  "@errorGeneric": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+  "errorCounterNotFound": "Counter not found",
+  "@errorCounterNotFound": {}
 }

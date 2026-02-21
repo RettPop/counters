@@ -162,4 +162,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get noColorOption => 'Ingen';
+
+  @override
+  String errorGeneric(String message) {
+    return 'Fel: $message';
+  }
+
+  @override
+  String get errorCounterNotFound => 'Räknare hittades inte';
 }

@@ -49,5 +49,7 @@
   "snackbarSaved": "Sparat",
   "snackbarSaveFailed": "Kunde inte spara: {error}",
   "editEntryTitle": "Redigera post",
-  "noColorOption": "Ingen"
+  "noColorOption": "Ingen",
+  "errorGeneric": "Fel: {message}",
+  "errorCounterNotFound": "Räknare hittades inte"
 }
