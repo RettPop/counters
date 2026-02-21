@@ -1,0 +1,161 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Counters",
+  "@appTitle": {"description": "App title shown in the list screen app bar"},
+
+  "counterListEmptyTitle": "No counters yet.",
+  "@counterListEmptyTitle": {},
+
+  "counterListEmptySubtitle": "Tap + to add one.",
+  "@counterListEmptySubtitle": {},
+
+  "newCounterTitle": "New Counter",
+  "@newCounterTitle": {},
+
+  "editCounterTitle": "Edit Counter",
+  "@editCounterTitle": {},
+
+  "counterDetailHistoryHeader": "History",
+  "@counterDetailHistoryHeader": {},
+
+  "currentValueLabel": "Current Value",
+  "@currentValueLabel": {},
+
+  "noValuePlaceholder": "—",
+  "@noValuePlaceholder": {},
+
+  "noValueEntry": "(no value)",
+  "@noValueEntry": {},
+
+  "buttonLog": "Log",
+  "@buttonLog": {},
+
+  "buttonSave": "Save",
+  "@buttonSave": {},
+
+  "buttonDelete": "Delete",
+  "@buttonDelete": {},
+
+  "buttonCancel": "Cancel",
+  "@buttonCancel": {},
+
+  "buttonStart": "Start",
+  "@buttonStart": {},
+
+  "buttonContinue": "Continue",
+  "@buttonContinue": {},
+
+  "buttonFinish": "Finish",
+  "@buttonFinish": {},
+
+  "buttonAddPhoto": "Add photo",
+  "@buttonAddPhoto": {},
+
+  "buttonFromGallery": "From gallery",
+  "@buttonFromGallery": {},
+
+  "buttonCamera": "Camera",
+  "@buttonCamera": {},
+
+  "buttonPickDateTime": "Pick date & time",
+  "@buttonPickDateTime": {},
+
+  "deleteCounterDialogTitle": "Delete Counter",
+  "@deleteCounterDialogTitle": {},
+
+  "deleteCounterDialogBody": "Delete \"{name}\"? This will permanently delete the counter and all its history.",
+  "@deleteCounterDialogBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "fieldName": "Name",
+  "@fieldName": {},
+
+  "fieldDescription": "Description",
+  "@fieldDescription": {},
+
+  "fieldChangeStep": "Change step (optional)",
+  "@fieldChangeStep": {},
+
+  "fieldChangeStepError": "Must be a number",
+  "@fieldChangeStepError": {},
+
+  "fieldNameRequired": "Name is required",
+  "@fieldNameRequired": {},
+
+  "fieldComment": "Comment (optional)",
+  "@fieldComment": {},
+
+  "fieldNewValue": "New value",
+  "@fieldNewValue": {},
+
+  "fieldTags": "Add tag",
+  "@fieldTags": {},
+
+  "labelAutoSave": "Auto-save after 2 seconds",
+  "@labelAutoSave": {},
+
+  "labelBehaviorType": "Behavior type",
+  "@labelBehaviorType": {},
+
+  "labelDataType": "Data type",
+  "@labelDataType": {},
+
+  "labelBackgroundColor": "Background color",
+  "@labelBackgroundColor": {},
+
+  "behaviorTypeValue": "Value",
+  "@behaviorTypeValue": {},
+
+  "behaviorTypeEvent": "Event",
+  "@behaviorTypeEvent": {},
+
+  "dataTypeInteger": "Integer",
+  "@dataTypeInteger": {},
+
+  "dataTypeFloat": "Float",
+  "@dataTypeFloat": {},
+
+  "dataTypeDateTime": "Date/Time",
+  "@dataTypeDateTime": {},
+
+  "dataTypeFreeText": "Text",
+  "@dataTypeFreeText": {},
+
+  "eventTypeStart": "Start",
+  "@eventTypeStart": {},
+
+  "eventTypeContinue": "Continue",
+  "@eventTypeContinue": {},
+
+  "eventTypeFinish": "Finish",
+  "@eventTypeFinish": {},
+
+  "eventTypeLog": "Log",
+  "@eventTypeLog": {},
+
+  "sincePreviewLabel": "since previous",
+  "@sincePreviewLabel": {},
+
+  "chartNotEnoughData": "Add more entries to see the chart",
+  "@chartNotEnoughData": {},
+
+  "snackbarSaved": "Saved",
+  "@snackbarSaved": {},
+
+  "snackbarSaveFailed": "Failed to save: {error}",
+  "@snackbarSaveFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "editEntryTitle": "Edit Entry",
+  "@editEntryTitle": {},
+
+  "noColorOption": "None",
+  "@noColorOption": {}
+}

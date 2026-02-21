@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/entries_provider.dart';
 
@@ -85,6 +86,7 @@ class CounterCell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final lastEntryAsync = ref.watch(lastEntryStreamProvider(counter.id));
 
     final backgroundColor = counter.backgroundColor != null
@@ -93,8 +95,8 @@ class CounterCell extends ConsumerWidget {
 
     final currentValueText = lastEntryAsync.when(
       loading: () => const Text('...'),
-      data: (entry) => Text(entry?.value ?? '—'),
-      error: (_, __) => const Text('—'),
+      data: (entry) => Text(entry?.value ?? l10n.noValuePlaceholder),
+      error: (_, __) => Text(l10n.noValuePlaceholder),
     );
 
     final lastEntry = lastEntryAsync.valueOrNull;

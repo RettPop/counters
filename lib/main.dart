@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'l10n/app_localizations.dart';
 import 'models/models.dart';
 import 'screens/counter_detail/counter_detail_screen.dart';
 import 'screens/counter_edit/counter_edit_screen.dart';
@@ -57,6 +58,8 @@ class CountersApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: _router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }

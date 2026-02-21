@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/entries_provider.dart';
 import '../../providers/photos_provider.dart';
@@ -58,8 +59,9 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save: $e')),
+        SnackBar(content: Text(l10n.snackbarSaveFailed(e.toString()))),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -115,6 +117,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final photosAsync = ref.watch(photosForEntryProvider(widget.entry.id));
     final photos = photosAsync.valueOrNull ?? [];
 
@@ -142,7 +145,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
 
               // Title
               Text(
-                'Edit Entry',
+                l10n.editEntryTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -150,9 +153,9 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
               // Comment field
               TextFormField(
                 controller: _commentController,
-                decoration: const InputDecoration(
-                  labelText: 'Comment',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldComment,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 3,
                 autofocus: true,
@@ -162,7 +165,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
 
               // Photos section
               Text(
-                'Photos',
+                l10n.buttonAddPhoto,
                 style: Theme.of(context).textTheme.titleSmall,
               ),
               const SizedBox(height: 8),
@@ -176,6 +179,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
                       return _AddPhotoButton(
                         onGallery: _pickFromGallery,
                         onCamera: _pickFromCamera,
+                        l10n: l10n,
                       );
                     }
                     final photo = photos[index];
@@ -231,7 +235,7 @@ class _EntryEditSheetState extends ConsumerState<EntryEditSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save'),
+                    : Text(l10n.buttonSave),
               ),
               const SizedBox(height: 16),
             ],
@@ -247,10 +251,12 @@ class _AddPhotoButton extends StatelessWidget {
   const _AddPhotoButton({
     required this.onGallery,
     required this.onCamera,
+    required this.l10n,
   });
 
   final VoidCallback onGallery;
   final VoidCallback onCamera;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +270,8 @@ class _AddPhotoButton extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onGallery,
               icon: const Icon(Icons.photo_library_outlined, size: 16),
-              label: const Text('Gallery', style: TextStyle(fontSize: 12)),
+              label: Text(l10n.buttonFromGallery,
+                  style: const TextStyle(fontSize: 12)),
               style: OutlinedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
@@ -277,7 +284,8 @@ class _AddPhotoButton extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onCamera,
               icon: const Icon(Icons.camera_alt_outlined, size: 16),
-              label: const Text('Camera', style: TextStyle(fontSize: 12)),
+              label: Text(l10n.buttonCamera,
+                  style: const TextStyle(fontSize: 12)),
               style: OutlinedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 0),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/photos_provider.dart';
 
@@ -45,17 +46,17 @@ String? formatDiff(double? currentNum, double? prevNum) {
   return '$sign$trimmed';
 }
 
-/// Returns the event type badge label for a given [EventType].
-String _eventTypeLabel(EventType type) {
+/// Returns the localised event type badge label for a given [EventType].
+String _eventTypeLabel(AppLocalizations l10n, EventType type) {
   switch (type) {
     case EventType.start:
-      return 'Start';
+      return l10n.eventTypeStart;
     case EventType.continueEvent:
-      return 'Continue';
+      return l10n.eventTypeContinue;
     case EventType.finish:
-      return 'Finish';
+      return l10n.eventTypeFinish;
     case EventType.value:
-      return 'Log';
+      return l10n.eventTypeLog;
   }
 }
 
@@ -97,6 +98,7 @@ class HistoryEntryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final isEventCounter = counter.behaviorType == BehaviorType.event;
@@ -145,7 +147,7 @@ class HistoryEntryTile extends ConsumerWidget {
                         ?.copyWith(fontWeight: FontWeight.bold),
                   )
                 : Text(
-                    '(no value)',
+                    l10n.noValueEntry,
                     style: textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontStyle: FontStyle.italic,
@@ -153,7 +155,7 @@ class HistoryEntryTile extends ConsumerWidget {
                   ),
             if (isEventCounter) ...[
               const SizedBox(width: 8),
-              _EventBadge(eventType: entry.eventType),
+              _EventBadge(eventType: entry.eventType, l10n: l10n),
             ],
           ],
         ),
@@ -174,7 +176,7 @@ class HistoryEntryTile extends ConsumerWidget {
                   children: [
                     if (durationStr != null)
                       Text(
-                        '\u23f1 $durationStr since previous',
+                        '\u23f1 $durationStr ${l10n.sincePreviewLabel}',
                         style: textTheme.bodySmall
                             ?.copyWith(color: Colors.grey.shade600),
                       ),
@@ -281,14 +283,15 @@ class _EventBadgeIcon extends StatelessWidget {
 
 /// A small rounded chip-style badge showing the event type label.
 class _EventBadge extends StatelessWidget {
-  const _EventBadge({required this.eventType});
+  const _EventBadge({required this.eventType, required this.l10n});
 
   final EventType eventType;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final color = _eventTypeBadgeColor(eventType);
-    final label = _eventTypeLabel(eventType);
+    final label = _eventTypeLabel(l10n, eventType);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

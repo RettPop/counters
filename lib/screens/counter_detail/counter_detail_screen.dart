@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
 import '../../providers/entries_provider.dart';
@@ -55,10 +56,11 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
       if (_valueController.text.trim().isNotEmpty) {
         _logEntry().then((_) {
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Saved'),
-                duration: Duration(seconds: 1),
+              SnackBar(
+                content: Text(l10n.snackbarSaved),
+                duration: const Duration(seconds: 1),
               ),
             );
           }
@@ -171,8 +173,9 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
         counter.dataType == DataType.float;
   }
 
-  Widget _buildInputSection(Counter counter, CounterEntry? lastEntry) {
-    final currentValue = lastEntry?.value ?? '—';
+  Widget _buildInputSection(
+      AppLocalizations l10n, Counter counter, CounterEntry? lastEntry) {
+    final currentValue = lastEntry?.value ?? l10n.noValuePlaceholder;
 
     TextInputType keyboardType;
     switch (counter.dataType) {
@@ -198,7 +201,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
               child: Column(
                 children: [
                   Text(
-                    'Current Value',
+                    l10n.currentValueLabel,
                     style: Theme.of(context).textTheme.labelSmall,
                   ),
                   Text(
@@ -218,7 +221,8 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 Expanded(
                   child: TextField(
                     controller: _valueController,
-                    decoration: const InputDecoration(labelText: 'New value'),
+                    decoration:
+                        InputDecoration(labelText: l10n.fieldNewValue),
                     keyboardType: keyboardType,
                     maxLines: 1,
                     onChanged: _onValueChanged,
@@ -228,14 +232,14 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _pickDateTime,
-                  child: const Text('Pick date & time'),
+                  child: Text(l10n.buttonPickDateTime),
                 ),
               ],
             ),
           ] else ...[
             TextField(
               controller: _valueController,
-              decoration: const InputDecoration(labelText: 'New value'),
+              decoration: InputDecoration(labelText: l10n.fieldNewValue),
               keyboardType: keyboardType,
               maxLines: counter.dataType == DataType.freeText ? 3 : 1,
               onChanged: _onValueChanged,
@@ -274,21 +278,21 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.start),
-                    child: const Text('Start'),
+                    child: Text(l10n.buttonStart),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.continueEvent),
-                    child: const Text('Continue'),
+                    child: Text(l10n.buttonContinue),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.finish),
-                    child: const Text('Finish'),
+                    child: Text(l10n.buttonFinish),
                   ),
                 ),
               ],
@@ -301,7 +305,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _logEntry,
-              child: const Text('Log'),
+              child: Text(l10n.buttonLog),
             ),
           ),
         ],
@@ -311,6 +315,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final counterAsync = ref.watch(counterByIdProvider(widget.counterId));
     final lastEntryAsync = ref.watch(lastEntryStreamProvider(widget.counterId));
 
@@ -357,7 +362,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
 
               // 2. Top input section
               SliverToBoxAdapter(
-                child: _buildInputSection(counter, lastEntry),
+                child: _buildInputSection(l10n, counter, lastEntry),
               ),
 
               // 3. Chart (Step 17)
@@ -374,7 +379,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 8),
                   child: Text(
-                    'History',
+                    l10n.counterDetailHistoryHeader,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),

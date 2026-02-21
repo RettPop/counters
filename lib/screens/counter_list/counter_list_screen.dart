@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../providers/counters_provider.dart';
 import 'counter_cell.dart';
 
@@ -10,23 +11,28 @@ class CounterListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final countersAsync = ref.watch(countersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Counters')),
+      appBar: AppBar(title: Text(l10n.appTitle)),
       body: countersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error: $error')),
         data: (counters) {
           if (counters.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add_chart, size: 64),
-                  SizedBox(height: 16),
+                  const Icon(Icons.add_chart, size: 64),
+                  const SizedBox(height: 16),
                   Text(
-                    'No counters yet.\nTap + to add one.',
+                    l10n.counterListEmptyTitle,
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    l10n.counterListEmptySubtitle,
                     textAlign: TextAlign.center,
                   ),
                 ],

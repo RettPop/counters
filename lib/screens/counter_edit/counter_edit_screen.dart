@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
 
@@ -131,24 +132,23 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Counter'),
-        content: Text(
-          'Delete "${_counter!.name}"? This will permanently delete the counter and all its history.',
-        ),
+        title: Text(l10n.deleteCounterDialogTitle),
+        content: Text(l10n.deleteCounterDialogBody(_counter!.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.buttonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.buttonDelete),
           ),
         ],
       ),
@@ -174,6 +174,8 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     // If extra was null (deep link / hot restart) and counterId is available,
     // watch the provider and populate the form once the counter is loaded.
     if (_counter == null && widget.counterId != null) {
@@ -189,7 +191,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     }
 
     final isCreating = _counter == null;
-    final title = isCreating ? 'New Counter' : 'Edit ${_counter!.name}';
+    final title = isCreating ? l10n.newCounterTitle : l10n.editCounterTitle;
     final showNumericFields = _selectedDataType == DataType.integer ||
         _selectedDataType == DataType.float;
 
@@ -201,11 +203,11 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
             IconButton(
               icon: const Icon(Icons.delete_outline),
               onPressed: _confirmDelete,
-              tooltip: 'Delete counter',
+              tooltip: l10n.buttonDelete,
             ),
           TextButton(
             onPressed: _save,
-            child: const Text('Save'),
+            child: Text(l10n.buttonSave),
           ),
         ],
       ),
@@ -220,13 +222,13 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               TextFormField(
                 controller: _nameController,
                 autofocus: isCreating,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldName,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
+                    return l10n.fieldNameRequired;
                   }
                   return null;
                 },
@@ -236,9 +238,9 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               // 2. Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldDescription,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 3,
               ),
@@ -246,19 +248,19 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
               // 3. Behavior type
               Text(
-                'Behavior',
+                l10n.labelBehaviorType,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
               SegmentedButton<BehaviorType>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: BehaviorType.value,
-                    label: Text('Value'),
+                    label: Text(l10n.behaviorTypeValue),
                   ),
                   ButtonSegment(
                     value: BehaviorType.event,
-                    label: Text('Event'),
+                    label: Text(l10n.behaviorTypeEvent),
                   ),
                 ],
                 selected: {_selectedBehaviorType},
@@ -269,27 +271,27 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
               // 4. Data type
               Text(
-                'Data Type',
+                l10n.labelDataType,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
               SegmentedButton<DataType>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: DataType.integer,
-                    label: Text('Integer'),
+                    label: Text(l10n.dataTypeInteger),
                   ),
                   ButtonSegment(
                     value: DataType.float,
-                    label: Text('Float'),
+                    label: Text(l10n.dataTypeFloat),
                   ),
                   ButtonSegment(
                     value: DataType.datetime,
-                    label: Text('Date/Time'),
+                    label: Text(l10n.dataTypeDateTime),
                   ),
                   ButtonSegment(
                     value: DataType.freeText,
-                    label: Text('Text'),
+                    label: Text(l10n.dataTypeFreeText),
                   ),
                 ],
                 selected: {_selectedDataType},
@@ -302,9 +304,9 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               if (showNumericFields) ...[
                 TextFormField(
                   controller: _changeStepController,
-                  decoration: const InputDecoration(
-                    labelText: 'Change step (optional)',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.fieldChangeStep,
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -314,7 +316,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
                       return null; // optional field
                     }
                     if (double.tryParse(value.trim()) == null) {
-                      return 'Must be a number';
+                      return l10n.fieldChangeStepError;
                     }
                     return null;
                   },
@@ -324,7 +326,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
               // 6. Auto-save
               SwitchListTile(
-                title: const Text('Auto-save after 2 seconds'),
+                title: Text(l10n.labelAutoSave),
                 value: _autoSave,
                 onChanged: (v) => setState(() => _autoSave = v),
                 contentPadding: EdgeInsets.zero,
@@ -333,16 +335,16 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
               // 7. Tags
               Text(
-                'Tags',
+                l10n.fieldTags,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
-              _buildTagInput(),
+              _buildTagInput(l10n),
               const SizedBox(height: 16),
 
               // 8. Background color
               Text(
-                'Background Color',
+                l10n.labelBackgroundColor,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
@@ -355,7 +357,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     );
   }
 
-  Widget _buildTagInput() {
+  Widget _buildTagInput(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -377,9 +379,9 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
         if (_tags.isNotEmpty) const SizedBox(height: 8),
         TextFormField(
           controller: _tagInputController,
-          decoration: const InputDecoration(
-            labelText: 'Add tag (press Enter or use comma)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.fieldTags,
+            border: const OutlineInputBorder(),
           ),
           onFieldSubmitted: _addTag,
           onChanged: (value) {

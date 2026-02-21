@@ -3,6 +3,7 @@ import 'dart:math' show min, max;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/counter.dart';
 import '../../models/counter_entry.dart';
 
@@ -18,6 +19,8 @@ class CounterHistoryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (counter.dataType != DataType.integer &&
         counter.dataType != DataType.float) {
       return const SizedBox.shrink();
@@ -34,7 +37,7 @@ class CounterHistoryChart extends StatelessWidget {
         height: 120,
         child: Center(
           child: Text(
-            'Add more entries to see the chart',
+            l10n.chartNotEnoughData,
             style: TextStyle(color: Colors.grey[600]),
           ),
         ),
