@@ -11,7 +11,12 @@ const _uuid = Uuid();
 class CounterEditScreen extends ConsumerStatefulWidget {
   final Counter? initialCounter;
 
-  const CounterEditScreen({super.key, this.initialCounter});
+  /// The counter's ID, provided when navigating to the edit route. Used as a
+  /// fallback to load the counter from the DB when [initialCounter] is null
+  /// (e.g. deep link or hot restart where [GoRouterState.extra] is lost).
+  final String? counterId;
+
+  const CounterEditScreen({super.key, this.initialCounter, this.counterId});
 
   @override
   ConsumerState<CounterEditScreen> createState() => _CounterEditScreenState();
@@ -31,6 +36,12 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   late int? _selectedColor;
   late bool _autoSave;
 
+  // The resolved counter: set immediately from [initialCounter] when available,
+  // or populated asynchronously via [counterByIdProvider] when only [counterId]
+  // is provided (deep link / hot restart).
+  Counter? _counter;
+  bool _loadedFromDb = false;
+
   static const _colorOptions = <int?>[
     null,
     0xFFF44336, // Colors.red
@@ -48,7 +59,11 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   @override
   void initState() {
     super.initState();
-    final c = widget.initialCounter;
+    _counter = widget.initialCounter;
+    _initFormFields(_counter);
+  }
+
+  void _initFormFields(Counter? c) {
     _nameController = TextEditingController(text: c?.name ?? '');
     _descriptionController = TextEditingController(text: c?.description ?? '');
     _changeStepController = TextEditingController(text: c?.changeStep ?? '');
@@ -58,6 +73,21 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     _tags = List<String>.from(c?.tags ?? []);
     _selectedColor = c?.backgroundColor;
     _autoSave = c?.autoSave ?? false;
+  }
+
+  /// Populates form fields from a counter loaded asynchronously from the DB.
+  void _applyCounterFromDb(Counter c) {
+    _counter = c;
+    _nameController.text = c.name;
+    _descriptionController.text = c.description;
+    _changeStepController.text = c.changeStep ?? '';
+    setState(() {
+      _selectedBehaviorType = c.behaviorType;
+      _selectedDataType = c.dataType;
+      _tags = List<String>.from(c.tags);
+      _selectedColor = c.backgroundColor;
+      _autoSave = c.autoSave;
+    });
   }
 
   @override
@@ -72,11 +102,11 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final isCreating = widget.initialCounter == null;
+    final isCreating = _counter == null;
     final now = DateTime.now();
 
     final counter = Counter(
-      id: isCreating ? _uuid.v4() : widget.initialCounter!.id,
+      id: isCreating ? _uuid.v4() : _counter!.id,
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       behaviorType: _selectedBehaviorType,
@@ -87,7 +117,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
           : _changeStepController.text.trim(),
       backgroundColor: _selectedColor,
       autoSave: _autoSave,
-      createdAt: isCreating ? now : widget.initialCounter!.createdAt,
+      createdAt: isCreating ? now : _counter!.createdAt,
       updatedAt: now,
     );
 
@@ -106,7 +136,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Counter'),
         content: Text(
-          'Delete "${widget.initialCounter!.name}"? This will permanently delete the counter and all its history.',
+          'Delete "${_counter!.name}"? This will permanently delete the counter and all its history.',
         ),
         actions: [
           TextButton(
@@ -127,7 +157,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     if (confirm == true) {
       await ref
           .read(counterNotifierProvider.notifier)
-          .deleteCounter(widget.initialCounter!.id);
+          .deleteCounter(_counter!.id);
       if (mounted) context.go('/');
     }
   }
@@ -144,8 +174,22 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isCreating = widget.initialCounter == null;
-    final title = isCreating ? 'New Counter' : 'Edit ${widget.initialCounter!.name}';
+    // If extra was null (deep link / hot restart) and counterId is available,
+    // watch the provider and populate the form once the counter is loaded.
+    if (_counter == null && widget.counterId != null) {
+      final async = ref.watch(counterByIdProvider(widget.counterId!));
+      async.whenData((c) {
+        if (c != null && !_loadedFromDb) {
+          _loadedFromDb = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _applyCounterFromDb(c);
+          });
+        }
+      });
+    }
+
+    final isCreating = _counter == null;
+    final title = isCreating ? 'New Counter' : 'Edit ${_counter!.name}';
     final showNumericFields = _selectedDataType == DataType.integer ||
         _selectedDataType == DataType.float;
 
@@ -265,6 +309,15 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return null; // optional field
+                    }
+                    if (double.tryParse(value.trim()) == null) {
+                      return 'Must be a number';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
               ],

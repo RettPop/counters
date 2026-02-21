@@ -8,6 +8,14 @@ final countersProvider = StreamProvider<List<Counter>>((ref) {
   return ref.watch(databaseProvider).countersDao.watchAllCounters();
 });
 
+/// Fetches a single counter by its [id]. Returns null if not found or deleted.
+/// Used as a fallback when navigating to the edit screen without passing the
+/// counter object via [GoRouterState.extra] (e.g. deep link or hot restart).
+final counterByIdProvider =
+    FutureProvider.family<Counter?, String>((ref, id) {
+  return ref.watch(databaseProvider).countersDao.getCounterById(id);
+});
+
 /// Handles all counter mutations (insert, update, soft-delete).
 class CounterNotifier extends AsyncNotifier<void> {
   @override

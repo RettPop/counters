@@ -31,56 +31,54 @@ class CounterCell extends ConsumerWidget {
         counter.dataType == DataType.float;
   }
 
-  void _handleDecrement(WidgetRef ref, CounterEntry? lastEntry) {
+  /// Applies a step change to the counter. [multiplier] is +1.0 for increment,
+  /// -1.0 for decrement.
+  Future<void> _handleStep(
+    WidgetRef ref,
+    CounterEntry? lastEntry,
+    double multiplier,
+  ) async {
     final step = double.parse(counter.changeStep!);
-    final currentValue = lastEntry?.numericValue;
-    final newValue = (currentValue ?? 0) - step;
-    final valueStr = _formatValue(newValue, counter.dataType);
+    final lastValue = lastEntry?.numericValue ?? 0;
+    final newValue = lastValue + (step * multiplier);
+    final formatted = _formatValue(newValue, counter.dataType);
+
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: counter.id,
       eventType: EventType.value,
-      value: valueStr,
+      value: formatted,
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
     );
-    ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
+
+    await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
     ref.invalidate(lastEntryProvider(counter.id));
   }
 
-  void _handleIncrement(WidgetRef ref, CounterEntry? lastEntry) {
-    final step = double.parse(counter.changeStep!);
-    final currentValue = lastEntry?.numericValue;
-    final newValue = (currentValue ?? 0) + step;
-    final valueStr = _formatValue(newValue, counter.dataType);
-    final now = DateTime.now();
-    final entry = CounterEntry(
-      id: _uuid.v4(),
-      counterId: counter.id,
-      eventType: EventType.value,
-      value: valueStr,
-      recordedAt: now,
-      createdAt: now,
-      updatedAt: now,
-    );
-    ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    ref.invalidate(lastEntryProvider(counter.id));
-  }
+  Future<void> _handleDecrement(WidgetRef ref, CounterEntry? lastEntry) =>
+      _handleStep(ref, lastEntry, -1.0);
 
-  void _handleTimestamp(WidgetRef ref, CounterEntry? lastEntry) {
+  Future<void> _handleIncrement(WidgetRef ref, CounterEntry? lastEntry) =>
+      _handleStep(ref, lastEntry, 1.0);
+
+  Future<void> _handleTimestamp(WidgetRef ref, CounterEntry? lastEntry) async {
+    // value is nullable in the DB schema (counter_entries_table.dart), so
+    // carrying forward the previous entry's value (or null for the first
+    // timestamp) is intentional.
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: counter.id,
       eventType: EventType.value,
-      value: lastEntry?.value,
+      value: lastEntry?.value, // nullable — matches the nullable DB column
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
     );
-    ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
+    await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
     ref.invalidate(lastEntryProvider(counter.id));
   }
 

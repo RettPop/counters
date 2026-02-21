@@ -25,8 +25,15 @@ final _router = GoRouter(
     GoRoute(
       path: '/counter/:id/edit',
       builder: (context, state) {
+        final counterId = state.pathParameters['id']!;
+        // Pass both: extra is an optimisation (avoids a DB round-trip when
+        // navigating from the list). counterId is the fallback used when extra
+        // is null (deep link, hot restart, etc.).
         final counter = state.extra as Counter?;
-        return CounterEditScreen(initialCounter: counter);
+        return CounterEditScreen(
+          initialCounter: counter,
+          counterId: counterId,
+        );
       },
     ),
   ],
