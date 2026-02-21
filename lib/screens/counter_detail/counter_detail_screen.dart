@@ -80,7 +80,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     await ref
         .read(entryNotifierProvider(widget.counterId).notifier)
         .addEntry(entry);
-    ref.invalidate(lastEntryProvider(widget.counterId));
+    if (!mounted) return;
     _valueController.clear();
   }
 
@@ -99,12 +99,13 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     await ref
         .read(entryNotifierProvider(widget.counterId).notifier)
         .addEntry(entry);
-    ref.invalidate(lastEntryProvider(widget.counterId));
+    // Stream auto-updates; no manual invalidation needed.
   }
 
   Future<void> _handleStep(Counter counter, CounterEntry? lastEntry,
       double multiplier) async {
-    final step = double.parse(counter.changeStep!);
+    final step = double.tryParse(counter.changeStep ?? '');
+    if (step == null) return;
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
     final formatted = _formatValue(newValue, counter.dataType);
@@ -121,7 +122,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     await ref
         .read(entryNotifierProvider(widget.counterId).notifier)
         .addEntry(entry);
-    ref.invalidate(lastEntryProvider(widget.counterId));
+    // Stream auto-updates; no manual invalidation needed.
   }
 
   Future<void> _pickDateTime() async {
@@ -297,9 +298,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final counterAsync = ref.watch(counterByIdProvider(widget.counterId));
-    final lastEntryAsync = ref.watch(lastEntryProvider(widget.counterId));
-    // Start watching entries for this counter (used in Step 13)
-    ref.watch(entriesForCounterProvider(widget.counterId));
+    final lastEntryAsync = ref.watch(lastEntryStreamProvider(widget.counterId));
 
     return counterAsync.when(
       loading: () => Scaffold(

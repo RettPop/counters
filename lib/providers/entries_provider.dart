@@ -13,12 +13,23 @@ final entriesForCounterProvider =
 });
 
 /// Returns the most recent entry for [counterId], or null if none exist.
+/// Kept for use in tests; prefer [lastEntryStreamProvider] in UI code.
 final lastEntryProvider =
     FutureProvider.family<CounterEntry?, String>((ref, counterId) {
   return ref
       .watch(databaseProvider)
       .entriesDao
       .getLastEntryForCounter(counterId);
+});
+
+/// Stream-based variant of [lastEntryProvider]. Auto-updates whenever entries
+/// change, eliminating the need for manual [ref.invalidate] calls.
+final lastEntryStreamProvider =
+    StreamProvider.family<CounterEntry?, String>((ref, counterId) {
+  return ref
+      .watch(databaseProvider)
+      .entriesDao
+      .watchLastEntryForCounter(counterId);
 });
 
 /// Handles entry mutations (insert, update) scoped to a specific counter.

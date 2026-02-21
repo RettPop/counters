@@ -22,6 +22,18 @@ class EntriesDao extends DatabaseAccessor<AppDatabase>
         .map((rows) => rows.map(_rowToDomain).toList());
   }
 
+  /// Stream of the most recent entry for a counter (newest recordedAt, not deleted).
+  Stream<domain.CounterEntry?> watchLastEntryForCounter(String counterId) {
+    return (select(counterEntries)
+          ..where(
+            (t) => t.counterId.equals(counterId) & t.deletedAt.isNull(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.recordedAt)])
+          ..limit(1))
+        .watchSingleOrNull()
+        .map((row) => row == null ? null : _rowToDomain(row));
+  }
+
   /// Most recent entry for a counter (newest recordedAt, not deleted).
   Future<domain.CounterEntry?> getLastEntryForCounter(String counterId) async {
     final row = await (select(counterEntries)

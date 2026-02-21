@@ -38,7 +38,8 @@ class CounterCell extends ConsumerWidget {
     CounterEntry? lastEntry,
     double multiplier,
   ) async {
-    final step = double.parse(counter.changeStep!);
+    final step = double.tryParse(counter.changeStep ?? '');
+    if (step == null) return;
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
     final formatted = _formatValue(newValue, counter.dataType);
@@ -55,7 +56,7 @@ class CounterCell extends ConsumerWidget {
     );
 
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    ref.invalidate(lastEntryProvider(counter.id));
+    // Stream auto-updates; no manual invalidation needed.
   }
 
   Future<void> _handleDecrement(WidgetRef ref, CounterEntry? lastEntry) =>
@@ -79,12 +80,12 @@ class CounterCell extends ConsumerWidget {
       updatedAt: now,
     );
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    ref.invalidate(lastEntryProvider(counter.id));
+    // Stream auto-updates; no manual invalidation needed.
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lastEntryAsync = ref.watch(lastEntryProvider(counter.id));
+    final lastEntryAsync = ref.watch(lastEntryStreamProvider(counter.id));
 
     final backgroundColor = counter.backgroundColor != null
         ? Color(counter.backgroundColor!)
