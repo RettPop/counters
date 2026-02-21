@@ -1,26 +1,24 @@
-import 'package:flutter/material.dart';
+import 'sentinel.dart';
 
 enum BehaviorType { value, event }
 
 enum DataType { integer, float, datetime, freeText }
 
-const _sentinel = Object();
-
 class Counter {
-  const Counter({
+  Counter({
     required this.id,
     required this.name,
     this.description = '',
     required this.behaviorType,
     required this.dataType,
-    required this.tags,
+    required List<String> tags,
     this.changeStep,
     this.backgroundColor,
     this.autoSaveDelay = false,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-  });
+  }) : tags = List.unmodifiable(tags);
 
   final String id;
   final String name;
@@ -29,7 +27,8 @@ class Counter {
   final DataType dataType;
   final List<String> tags;
   final String? changeStep;
-  final Color? backgroundColor;
+  // Stores color as ARGB integer (same encoding as Flutter's Color.value).
+  final int? backgroundColor;
   final bool autoSaveDelay;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -42,12 +41,12 @@ class Counter {
     BehaviorType? behaviorType,
     DataType? dataType,
     List<String>? tags,
-    Object? changeStep = _sentinel,
-    Object? backgroundColor = _sentinel,
+    Object? changeStep = kSentinel,
+    Object? backgroundColor = kSentinel,
     bool? autoSaveDelay,
     DateTime? createdAt,
     DateTime? updatedAt,
-    Object? deletedAt = _sentinel,
+    Object? deletedAt = kSentinel,
   }) {
     return Counter(
       id: id ?? this.id,
@@ -57,15 +56,26 @@ class Counter {
       dataType: dataType ?? this.dataType,
       tags: tags ?? this.tags,
       changeStep:
-          changeStep == _sentinel ? this.changeStep : changeStep as String?,
-      backgroundColor: backgroundColor == _sentinel
+          changeStep == kSentinel ? this.changeStep : changeStep as String?,
+      backgroundColor: backgroundColor == kSentinel
           ? this.backgroundColor
-          : backgroundColor as Color?,
+          : backgroundColor as int?,
       autoSaveDelay: autoSaveDelay ?? this.autoSaveDelay,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt:
-          deletedAt == _sentinel ? this.deletedAt : deletedAt as DateTime?,
+          deletedAt == kSentinel ? this.deletedAt : deletedAt as DateTime?,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Counter && id == other.id && updatedAt == other.updatedAt;
+
+  @override
+  int get hashCode => Object.hash(id, updatedAt);
+
+  @override
+  String toString() => 'Counter(id: $id, name: $name, dataType: $dataType)';
 }

@@ -1,6 +1,6 @@
-enum EventType { value, start, continueEvent, finish }
+import 'sentinel.dart';
 
-const _sentinel = Object();
+enum EventType { value, start, continueEvent, finish }
 
 class CounterEntry {
   const CounterEntry({
@@ -31,24 +31,38 @@ class CounterEntry {
     String? id,
     String? counterId,
     EventType? eventType,
-    Object? value = _sentinel,
-    Object? comment = _sentinel,
+    Object? value = kSentinel,
+    Object? comment = kSentinel,
     DateTime? recordedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
-    Object? deletedAt = _sentinel,
+    Object? deletedAt = kSentinel,
   }) {
     return CounterEntry(
       id: id ?? this.id,
       counterId: counterId ?? this.counterId,
       eventType: eventType ?? this.eventType,
-      value: value == _sentinel ? this.value : value as String?,
-      comment: comment == _sentinel ? this.comment : comment as String?,
+      value: value == kSentinel ? this.value : value as String?,
+      comment: comment == kSentinel ? this.comment : comment as String?,
       recordedAt: recordedAt ?? this.recordedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt:
-          deletedAt == _sentinel ? this.deletedAt : deletedAt as DateTime?,
+          deletedAt == kSentinel ? this.deletedAt : deletedAt as DateTime?,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CounterEntry &&
+          id == other.id &&
+          updatedAt == other.updatedAt;
+
+  @override
+  int get hashCode => Object.hash(id, updatedAt);
+
+  @override
+  String toString() =>
+      'CounterEntry(id: $id, counterId: $counterId, value: $value)';
 }
