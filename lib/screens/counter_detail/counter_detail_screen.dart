@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
 import '../../providers/entries_provider.dart';
+import 'counter_history_chart.dart';
 import 'entry_edit_sheet.dart';
 import 'history_entry_tile.dart';
 
@@ -359,8 +360,13 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 child: _buildInputSection(counter, lastEntry),
               ),
 
-              // 3. Placeholder for chart (Step 17)
-              const SliverToBoxAdapter(child: SizedBox.shrink()),
+              // 3. Chart (Step 17)
+              SliverToBoxAdapter(
+                child: CounterHistoryChart(
+                  entries: entries,
+                  counter: counter,
+                ),
+              ),
 
               // 4. History header
               SliverToBoxAdapter(
