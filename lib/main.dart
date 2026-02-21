@@ -8,6 +8,18 @@ final _router = GoRouter(
       path: '/',
       builder: (context, state) => const CounterListPage(),
     ),
+    GoRoute(
+      path: '/counter/new',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Create counter — coming soon')),
+      ),
+    ),
+    GoRoute(
+      path: '/counter/:id',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Counter detail — coming soon')),
+      ),
+    ),
   ],
 );
 
@@ -31,6 +43,7 @@ class CountersApp extends StatelessWidget {
   }
 }
 
+// TODO(step-6): Replace with CounterListScreen from lib/screens/counter_list/.
 class CounterListPage extends StatelessWidget {
   const CounterListPage({super.key});
 
