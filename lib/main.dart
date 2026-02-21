@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'models/models.dart';
+import 'screens/counter_edit/counter_edit_screen.dart';
 import 'screens/counter_list/counter_list_screen.dart';
 
 final _router = GoRouter(
@@ -12,9 +14,7 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/counter/new',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Create counter — coming soon')),
-      ),
+      builder: (context, state) => const CounterEditScreen(),
     ),
     GoRoute(
       path: '/counter/:id',
@@ -24,9 +24,10 @@ final _router = GoRouter(
     ),
     GoRoute(
       path: '/counter/:id/edit',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Edit counter — coming soon')),
-      ),
+      builder: (context, state) {
+        final counter = state.extra as Counter?;
+        return CounterEditScreen(initialCounter: counter);
+      },
     ),
   ],
 );
