@@ -16,7 +16,7 @@ class CounterCell extends ConsumerWidget {
 
     final backgroundColor = counter.backgroundColor != null
         ? Color(counter.backgroundColor!)
-        : Theme.of(context).cardColor;
+        : Theme.of(context).colorScheme.surface;
 
     final currentValueText = lastEntryAsync.when(
       loading: () => const Text('...'),
@@ -29,7 +29,7 @@ class CounterCell extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/counter/${counter.id}'),
+        onTap: () => context.push('/counter/${counter.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

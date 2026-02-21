@@ -42,7 +42,7 @@ class CounterListScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/counter/new'),
+        onPressed: () => context.push('/counter/new'),
         child: const Icon(Icons.add),
       ),
     );
