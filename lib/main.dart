@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'screens/counter_list/counter_list_screen.dart';
+
 final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => const CounterListPage(),
+      builder: (context, state) => const CounterListScreen(),
     ),
     GoRoute(
       path: '/counter/new',
@@ -18,6 +20,12 @@ final _router = GoRouter(
       path: '/counter/:id',
       builder: (context, state) => const Scaffold(
         body: Center(child: Text('Counter detail — coming soon')),
+      ),
+    ),
+    GoRoute(
+      path: '/counter/:id/edit',
+      builder: (context, state) => const Scaffold(
+        body: Center(child: Text('Edit counter — coming soon')),
       ),
     ),
   ],
@@ -39,21 +47,6 @@ class CountersApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routerConfig: _router,
-    );
-  }
-}
-
-// TODO(step-6): Replace with CounterListScreen from lib/screens/counter_list/.
-class CounterListPage extends StatelessWidget {
-  const CounterListPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Counters')),
-      body: const Center(
-        child: Text('Counter list coming soon'),
-      ),
     );
   }
 }
