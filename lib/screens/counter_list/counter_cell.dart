@@ -9,6 +9,19 @@ import '../../providers/entries_provider.dart';
 
 const _uuid = Uuid();
 
+String _formatLastChanged(DateTime dt) {
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  final d = dt.day.toString().padLeft(2, '0');
+  final mon = months[dt.month - 1];
+  final y = dt.year;
+  final h = dt.hour.toString().padLeft(2, '0');
+  final m = dt.minute.toString().padLeft(2, '0');
+  return '$d $mon $y, $h:$m';
+}
+
 String _formatValue(double val, DataType dataType) {
   if (dataType == DataType.integer) {
     return val.truncate().toString();
@@ -153,24 +166,36 @@ class CounterCell extends ConsumerWidget {
               if (_showQuickActions) ...[
                 const SizedBox(height: 8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.remove),
                       onPressed: () => _handleDecrement(ref, lastEntry),
                       tooltip: 'Decrement',
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => _handleIncrement(ref, lastEntry),
-                      tooltip: 'Increment',
-                    ),
+                    const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.radio_button_checked),
                       onPressed: () => _handleTimestamp(ref, lastEntry),
                       tooltip: 'Record timestamp',
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => _handleIncrement(ref, lastEntry),
+                      tooltip: 'Increment',
+                    ),
                   ],
+                ),
+              ],
+              if (lastEntry != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _formatLastChanged(lastEntry.recordedAt),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.55),
+                      ),
                 ),
               ],
             ],
