@@ -284,12 +284,6 @@ abstract class AppLocalizations {
   /// **'Auto-save after 2 seconds'**
   String get labelAutoSave;
 
-  /// No description provided for @labelBehaviorType.
-  ///
-  /// In en, this message translates to:
-  /// **'Behavior type'**
-  String get labelBehaviorType;
-
   /// No description provided for @labelDataType.
   ///
   /// In en, this message translates to:
@@ -302,29 +296,11 @@ abstract class AppLocalizations {
   /// **'Background color'**
   String get labelBackgroundColor;
 
-  /// No description provided for @behaviorTypeValue.
+  /// No description provided for @dataTypeNumeric.
   ///
   /// In en, this message translates to:
-  /// **'Value'**
-  String get behaviorTypeValue;
-
-  /// No description provided for @behaviorTypeEvent.
-  ///
-  /// In en, this message translates to:
-  /// **'Event'**
-  String get behaviorTypeEvent;
-
-  /// No description provided for @dataTypeInteger.
-  ///
-  /// In en, this message translates to:
-  /// **'Integer'**
-  String get dataTypeInteger;
-
-  /// No description provided for @dataTypeFloat.
-  ///
-  /// In en, this message translates to:
-  /// **'Float'**
-  String get dataTypeFloat;
+  /// **'Numeric'**
+  String get dataTypeNumeric;
 
   /// No description provided for @dataTypeDateTime.
   ///
@@ -337,6 +313,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text'**
   String get dataTypeFreeText;
+
+  /// No description provided for @dataTypeEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get dataTypeEvent;
 
   /// No description provided for @eventTypeStart.
   ///

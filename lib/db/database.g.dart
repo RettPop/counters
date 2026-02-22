@@ -30,8 +30,8 @@ class $CountersTable extends Counters with TableInfo<$CountersTable, Counter> {
       const VerificationMeta('behaviorType');
   @override
   late final GeneratedColumn<String> behaviorType = GeneratedColumn<String>(
-      'behavior_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      'behavior_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _dataTypeMeta =
       const VerificationMeta('dataType');
   @override
@@ -132,8 +132,6 @@ class $CountersTable extends Counters with TableInfo<$CountersTable, Counter> {
           _behaviorTypeMeta,
           behaviorType.isAcceptableOrUnknown(
               data['behavior_type']!, _behaviorTypeMeta));
-    } else if (isInserting) {
-      context.missing(_behaviorTypeMeta);
     }
     if (data.containsKey('data_type')) {
       context.handle(_dataTypeMeta,
@@ -193,7 +191,7 @@ class $CountersTable extends Counters with TableInfo<$CountersTable, Counter> {
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
       behaviorType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}behavior_type'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}behavior_type']),
       dataType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}data_type'])!,
       tags: attachedDatabase.typeMapping
@@ -223,7 +221,7 @@ class Counter extends DataClass implements Insertable<Counter> {
   final String id;
   final String name;
   final String description;
-  final String behaviorType;
+  final String? behaviorType;
   final String dataType;
   final String tags;
   final String? changeStep;
@@ -236,7 +234,7 @@ class Counter extends DataClass implements Insertable<Counter> {
       {required this.id,
       required this.name,
       required this.description,
-      required this.behaviorType,
+      this.behaviorType,
       required this.dataType,
       required this.tags,
       this.changeStep,
@@ -251,7 +249,9 @@ class Counter extends DataClass implements Insertable<Counter> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['description'] = Variable<String>(description);
-    map['behavior_type'] = Variable<String>(behaviorType);
+    if (!nullToAbsent || behaviorType != null) {
+      map['behavior_type'] = Variable<String>(behaviorType);
+    }
     map['data_type'] = Variable<String>(dataType);
     map['tags'] = Variable<String>(tags);
     if (!nullToAbsent || changeStep != null) {
@@ -274,7 +274,9 @@ class Counter extends DataClass implements Insertable<Counter> {
       id: Value(id),
       name: Value(name),
       description: Value(description),
-      behaviorType: Value(behaviorType),
+      behaviorType: behaviorType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(behaviorType),
       dataType: Value(dataType),
       tags: Value(tags),
       changeStep: changeStep == null && nullToAbsent
@@ -299,7 +301,7 @@ class Counter extends DataClass implements Insertable<Counter> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String>(json['description']),
-      behaviorType: serializer.fromJson<String>(json['behaviorType']),
+      behaviorType: serializer.fromJson<String?>(json['behaviorType']),
       dataType: serializer.fromJson<String>(json['dataType']),
       tags: serializer.fromJson<String>(json['tags']),
       changeStep: serializer.fromJson<String?>(json['changeStep']),
@@ -317,7 +319,7 @@ class Counter extends DataClass implements Insertable<Counter> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String>(description),
-      'behaviorType': serializer.toJson<String>(behaviorType),
+      'behaviorType': serializer.toJson<String?>(behaviorType),
       'dataType': serializer.toJson<String>(dataType),
       'tags': serializer.toJson<String>(tags),
       'changeStep': serializer.toJson<String?>(changeStep),
@@ -333,7 +335,7 @@ class Counter extends DataClass implements Insertable<Counter> {
           {String? id,
           String? name,
           String? description,
-          String? behaviorType,
+          Value<String?> behaviorType = const Value.absent(),
           String? dataType,
           String? tags,
           Value<String?> changeStep = const Value.absent(),
@@ -346,7 +348,8 @@ class Counter extends DataClass implements Insertable<Counter> {
         id: id ?? this.id,
         name: name ?? this.name,
         description: description ?? this.description,
-        behaviorType: behaviorType ?? this.behaviorType,
+        behaviorType:
+            behaviorType.present ? behaviorType.value : this.behaviorType,
         dataType: dataType ?? this.dataType,
         tags: tags ?? this.tags,
         changeStep: changeStep.present ? changeStep.value : this.changeStep,
@@ -436,7 +439,7 @@ class CountersCompanion extends UpdateCompanion<Counter> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> description;
-  final Value<String> behaviorType;
+  final Value<String?> behaviorType;
   final Value<String> dataType;
   final Value<String> tags;
   final Value<String?> changeStep;
@@ -465,7 +468,7 @@ class CountersCompanion extends UpdateCompanion<Counter> {
     required String id,
     required String name,
     this.description = const Value.absent(),
-    required String behaviorType,
+    this.behaviorType = const Value.absent(),
     required String dataType,
     this.tags = const Value.absent(),
     this.changeStep = const Value.absent(),
@@ -477,7 +480,6 @@ class CountersCompanion extends UpdateCompanion<Counter> {
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
-        behaviorType = Value(behaviorType),
         dataType = Value(dataType),
         createdAt = Value(createdAt),
         updatedAt = Value(updatedAt);
@@ -517,7 +519,7 @@ class CountersCompanion extends UpdateCompanion<Counter> {
       {Value<String>? id,
       Value<String>? name,
       Value<String>? description,
-      Value<String>? behaviorType,
+      Value<String?>? behaviorType,
       Value<String>? dataType,
       Value<String>? tags,
       Value<String?>? changeStep,
@@ -1415,7 +1417,7 @@ typedef $$CountersTableCreateCompanionBuilder = CountersCompanion Function({
   required String id,
   required String name,
   Value<String> description,
-  required String behaviorType,
+  Value<String?> behaviorType,
   required String dataType,
   Value<String> tags,
   Value<String?> changeStep,
@@ -1430,7 +1432,7 @@ typedef $$CountersTableUpdateCompanionBuilder = CountersCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<String> description,
-  Value<String> behaviorType,
+  Value<String?> behaviorType,
   Value<String> dataType,
   Value<String> tags,
   Value<String?> changeStep,
@@ -1609,7 +1611,7 @@ class $$CountersTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> description = const Value.absent(),
-            Value<String> behaviorType = const Value.absent(),
+            Value<String?> behaviorType = const Value.absent(),
             Value<String> dataType = const Value.absent(),
             Value<String> tags = const Value.absent(),
             Value<String?> changeStep = const Value.absent(),
@@ -1639,7 +1641,7 @@ class $$CountersTableTableManager extends RootTableManager<
             required String id,
             required String name,
             Value<String> description = const Value.absent(),
-            required String behaviorType,
+            Value<String?> behaviorType = const Value.absent(),
             required String dataType,
             Value<String> tags = const Value.absent(),
             Value<String?> changeStep = const Value.absent(),

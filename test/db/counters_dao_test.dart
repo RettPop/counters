@@ -26,8 +26,7 @@ void main() {
         id: id,
         name: name,
         description: 'A test counter',
-        behaviorType: domain.BehaviorType.value,
-        dataType: domain.DataType.integer,
+        dataType: domain.DataType.numeric,
         tags: tags,
         changeStep: changeStep,
         backgroundColor: backgroundColor,
@@ -45,8 +44,7 @@ void main() {
       expect(fetched!.id, 'c-1');
       expect(fetched.name, 'Steps');
       expect(fetched.description, 'A test counter');
-      expect(fetched.behaviorType, domain.BehaviorType.value);
-      expect(fetched.dataType, domain.DataType.integer);
+      expect(fetched.dataType, domain.DataType.numeric);
       expect(fetched.tags, ['fitness', 'daily']);
       expect(fetched.backgroundColor, 0xFFFF5733);
       expect(fetched.changeStep, '1');

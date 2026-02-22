@@ -104,31 +104,22 @@ class AppLocalizationsSv extends AppLocalizations {
   String get labelAutoSave => 'Autospara efter 2 sekunder';
 
   @override
-  String get labelBehaviorType => 'Beteendetyp';
-
-  @override
   String get labelDataType => 'Datatyp';
 
   @override
   String get labelBackgroundColor => 'Bakgrundsfärg';
 
   @override
-  String get behaviorTypeValue => 'Värde';
-
-  @override
-  String get behaviorTypeEvent => 'Händelse';
-
-  @override
-  String get dataTypeInteger => 'Heltal';
-
-  @override
-  String get dataTypeFloat => 'Decimaltal';
+  String get dataTypeNumeric => 'Numerisk';
 
   @override
   String get dataTypeDateTime => 'Datum/tid';
 
   @override
   String get dataTypeFreeText => 'Text';
+
+  @override
+  String get dataTypeEvent => 'Händelse';
 
   @override
   String get eventTypeStart => 'Start';

@@ -13,8 +13,7 @@ void main() {
     final base = Counter(
       id: 'c1',
       name: 'Steps',
-      behaviorType: BehaviorType.value,
-      dataType: DataType.integer,
+      dataType: DataType.numeric,
       tags: const ['fitness'],
       backgroundColor: 0xFFFF0000,
       changeStep: '1',
@@ -52,8 +51,7 @@ void main() {
       final counter = Counter(
         id: 'c2',
         name: 'Test',
-        behaviorType: BehaviorType.event,
-        dataType: DataType.float,
+        dataType: DataType.numeric,
         tags: ['a', 'b'],
         createdAt: now,
         updatedAt: now,

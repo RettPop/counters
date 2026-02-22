@@ -4,7 +4,7 @@ class Counters extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
-  TextColumn get behaviorType => text()();
+  TextColumn get behaviorType => text().nullable()();
   TextColumn get dataType => text()();
   TextColumn get tags => text().withDefault(const Constant('[]'))();
   TextColumn get changeStep => text().nullable()();

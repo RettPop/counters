@@ -98,26 +98,14 @@
   "labelAutoSave": "Auto-save after 2 seconds",
   "@labelAutoSave": {},
 
-  "labelBehaviorType": "Behavior type",
-  "@labelBehaviorType": {},
-
   "labelDataType": "Data type",
   "@labelDataType": {},
 
   "labelBackgroundColor": "Background color",
   "@labelBackgroundColor": {},
 
-  "behaviorTypeValue": "Value",
-  "@behaviorTypeValue": {},
-
-  "behaviorTypeEvent": "Event",
-  "@behaviorTypeEvent": {},
-
-  "dataTypeInteger": "Integer",
-  "@dataTypeInteger": {},
-
-  "dataTypeFloat": "Float",
-  "@dataTypeFloat": {},
+  "dataTypeNumeric": "Numeric",
+  "@dataTypeNumeric": {},
 
   "dataTypeDateTime": "Date/Time",
   "@dataTypeDateTime": {},
@@ -175,5 +163,8 @@
   "@inlineNoteCollapse": {},
 
   "inlineNoteSaved": "Entry saved",
-  "@inlineNoteSaved": {}
+  "@inlineNoteSaved": {},
+
+  "dataTypeEvent": "Event",
+  "@dataTypeEvent": {}
 }

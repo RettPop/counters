@@ -22,11 +22,7 @@ String _formatLastChanged(DateTime dt) {
   return '$d $mon $y, $h:$m';
 }
 
-String _formatValue(double val, DataType dataType) {
-  if (dataType == DataType.integer) {
-    return val.truncate().toString();
-  }
-  // float: up to 2 decimals, trim trailing zeros
+String _formatValue(double val) {
   String s = val.toStringAsFixed(2);
   s = s.replaceAll(RegExp(r'0+$'), '');
   s = s.replaceAll(RegExp(r'\.$'), '');
@@ -41,8 +37,7 @@ class CounterCell extends ConsumerWidget {
   bool get _showQuickActions {
     if (counter.changeStep == null) return false;
     if (double.tryParse(counter.changeStep!) == null) return false;
-    return counter.dataType == DataType.integer ||
-        counter.dataType == DataType.float;
+    return counter.dataType == DataType.numeric;
   }
 
   /// Applies a step change to the counter. [multiplier] is +1.0 for increment,
@@ -56,7 +51,7 @@ class CounterCell extends ConsumerWidget {
     if (step == null) return;
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
-    final formatted = _formatValue(newValue, counter.dataType);
+    final formatted = _formatValue(newValue);
 
     final now = DateTime.now();
     final entry = CounterEntry(

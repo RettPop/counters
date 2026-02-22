@@ -19,11 +19,7 @@ import 'history_entry_tile.dart';
 
 const _uuid = Uuid();
 
-String _formatValue(double val, DataType dataType) {
-  if (dataType == DataType.integer) {
-    return val.truncate().toString();
-  }
-  // float: up to 2 decimals, trim trailing zeros
+String _formatValue(double val) {
   String s = val.toStringAsFixed(2);
   s = s.replaceAll(RegExp(r'0+$'), '');
   s = s.replaceAll(RegExp(r'\.$'), '');
@@ -190,7 +186,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     if (step == null) return;
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
-    final formatted = _formatValue(newValue, counter.dataType);
+    final formatted = _formatValue(newValue);
     final comment = _commentController.text.trim();
     final now = DateTime.now();
     final entry = CounterEntry(
@@ -249,8 +245,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
   bool _showStepButtons(Counter counter) {
     if (counter.changeStep == null) return false;
     if (double.tryParse(counter.changeStep!) == null) return false;
-    return counter.dataType == DataType.integer ||
-        counter.dataType == DataType.float;
+    return counter.dataType == DataType.numeric;
   }
 
   Widget _buildInputSection(
@@ -259,14 +254,14 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
 
     TextInputType keyboardType;
     switch (counter.dataType) {
-      case DataType.integer:
-        keyboardType = TextInputType.number;
-      case DataType.float:
+      case DataType.numeric:
         keyboardType = const TextInputType.numberWithOptions(decimal: true);
       case DataType.datetime:
         keyboardType = TextInputType.datetime;
       case DataType.freeText:
         keyboardType = TextInputType.multiline;
+      case DataType.event:
+        keyboardType = TextInputType.text;
     }
 
     return Padding(
@@ -352,7 +347,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
           ],
 
           // Event buttons (event behavior type)
-          if (counter.behaviorType == BehaviorType.event) ...[
+          if (counter.dataType == DataType.event) ...[
             Row(
               children: [
                 Expanded(
@@ -380,14 +375,16 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
             const SizedBox(height: 16),
           ],
 
-          // Log button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _logEntry,
-              child: Text(l10n.buttonLog),
+          // Log button (not shown for event counters — they use Start/Continue/Finish)
+          if (counter.dataType != DataType.event) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _logEntry,
+                child: Text(l10n.buttonLog),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

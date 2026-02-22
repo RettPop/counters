@@ -104,31 +104,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelAutoSave => 'Auto-save after 2 seconds';
 
   @override
-  String get labelBehaviorType => 'Behavior type';
-
-  @override
   String get labelDataType => 'Data type';
 
   @override
   String get labelBackgroundColor => 'Background color';
 
   @override
-  String get behaviorTypeValue => 'Value';
-
-  @override
-  String get behaviorTypeEvent => 'Event';
-
-  @override
-  String get dataTypeInteger => 'Integer';
-
-  @override
-  String get dataTypeFloat => 'Float';
+  String get dataTypeNumeric => 'Numeric';
 
   @override
   String get dataTypeDateTime => 'Date/Time';
 
   @override
   String get dataTypeFreeText => 'Text';
+
+  @override
+  String get dataTypeEvent => 'Event';
 
   @override
   String get eventTypeStart => 'Start';

@@ -59,13 +59,12 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       id: row.id,
       name: row.name,
       description: row.description,
-      behaviorType: domain.BehaviorType.values.firstWhere(
-        (e) => e.name == row.behaviorType,
-        orElse: () => domain.BehaviorType.value,
-      ),
       dataType: domain.DataType.values.firstWhere(
         (e) => e.name == row.dataType,
-        orElse: () => domain.DataType.freeText,
+        orElse: () {
+          assert(false, 'Unknown dataType "${row.dataType}" for counter ${row.id}');
+          return domain.DataType.freeText;
+        },
       ),
       tags: List.unmodifiable(() {
         try {
@@ -88,7 +87,6 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       id: Value(c.id),
       name: Value(c.name),
       description: Value(c.description),
-      behaviorType: Value(c.behaviorType.name),
       dataType: Value(c.dataType.name),
       tags: Value(jsonEncode(c.tags)),
       changeStep: Value(c.changeStep),

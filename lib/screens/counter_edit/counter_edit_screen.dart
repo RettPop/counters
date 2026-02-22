@@ -31,7 +31,6 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   late final TextEditingController _changeStepController;
   late final TextEditingController _tagInputController;
 
-  late BehaviorType _selectedBehaviorType;
   late DataType _selectedDataType;
   late List<String> _tags;
   late int? _selectedColor;
@@ -69,8 +68,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     _descriptionController = TextEditingController(text: c?.description ?? '');
     _changeStepController = TextEditingController(text: c?.changeStep ?? '');
     _tagInputController = TextEditingController();
-    _selectedBehaviorType = c?.behaviorType ?? BehaviorType.value;
-    _selectedDataType = c?.dataType ?? DataType.integer;
+    _selectedDataType = c?.dataType ?? DataType.numeric;
     _tags = List<String>.from(c?.tags ?? []);
     _selectedColor = c?.backgroundColor;
     _autoSave = c?.autoSave ?? false;
@@ -83,7 +81,6 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     _descriptionController.text = c.description;
     _changeStepController.text = c.changeStep ?? '';
     setState(() {
-      _selectedBehaviorType = c.behaviorType;
       _selectedDataType = c.dataType;
       _tags = List<String>.from(c.tags);
       _selectedColor = c.backgroundColor;
@@ -110,7 +107,6 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
       id: isCreating ? _uuid.v4() : _counter!.id,
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
-      behaviorType: _selectedBehaviorType,
       dataType: _selectedDataType,
       tags: _tags,
       changeStep: _changeStepController.text.trim().isEmpty
@@ -192,8 +188,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
     final isCreating = _counter == null;
     final title = isCreating ? l10n.newCounterTitle : l10n.editCounterTitle;
-    final showNumericFields = _selectedDataType == DataType.integer ||
-        _selectedDataType == DataType.float;
+    final showNumericFields = _selectedDataType == DataType.numeric;
 
     return Scaffold(
       appBar: AppBar(
@@ -248,30 +243,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 3. Behavior type
-              Text(
-                l10n.labelBehaviorType,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<BehaviorType>(
-                segments: [
-                  ButtonSegment(
-                    value: BehaviorType.value,
-                    label: Text(l10n.behaviorTypeValue),
-                  ),
-                  ButtonSegment(
-                    value: BehaviorType.event,
-                    label: Text(l10n.behaviorTypeEvent),
-                  ),
-                ],
-                selected: {_selectedBehaviorType},
-                onSelectionChanged: (s) =>
-                    setState(() => _selectedBehaviorType = s.first),
-              ),
-              const SizedBox(height: 16),
-
-              // 4. Data type
+              // 3. Data type
               Text(
                 l10n.labelDataType,
                 style: Theme.of(context).textTheme.labelLarge,
@@ -280,12 +252,8 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               SegmentedButton<DataType>(
                 segments: [
                   ButtonSegment(
-                    value: DataType.integer,
-                    label: Text(l10n.dataTypeInteger),
-                  ),
-                  ButtonSegment(
-                    value: DataType.float,
-                    label: Text(l10n.dataTypeFloat),
+                    value: DataType.numeric,
+                    label: Text(l10n.dataTypeNumeric),
                   ),
                   ButtonSegment(
                     value: DataType.datetime,
@@ -294,6 +262,10 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
                   ButtonSegment(
                     value: DataType.freeText,
                     label: Text(l10n.dataTypeFreeText),
+                  ),
+                  ButtonSegment(
+                    value: DataType.event,
+                    label: Text(l10n.dataTypeEvent),
                   ),
                 ],
                 selected: {_selectedDataType},

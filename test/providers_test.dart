@@ -49,8 +49,7 @@ void main() {
       final counter = Counter(
         id: 'c1',
         name: 'Test Counter',
-        behaviorType: BehaviorType.value,
-        dataType: DataType.integer,
+        dataType: DataType.numeric,
         tags: const [],
         createdAt: now,
         updatedAt: now,
@@ -84,7 +83,6 @@ void main() {
       final counter = Counter(
         id: 'c-del',
         name: 'To Delete',
-        behaviorType: BehaviorType.event,
         dataType: DataType.freeText,
         tags: const [],
         createdAt: now,
@@ -139,8 +137,7 @@ void main() {
       final counter = Counter(
         id: 'c2',
         name: 'Parent',
-        behaviorType: BehaviorType.value,
-        dataType: DataType.integer,
+        dataType: DataType.numeric,
         tags: const [],
         createdAt: now,
         updatedAt: now,

@@ -31,13 +31,9 @@
   "fieldNewValue": "Nytt värde",
   "fieldTags": "Lägg till tagg",
   "labelAutoSave": "Autospara efter 2 sekunder",
-  "labelBehaviorType": "Beteendetyp",
   "labelDataType": "Datatyp",
   "labelBackgroundColor": "Bakgrundsfärg",
-  "behaviorTypeValue": "Värde",
-  "behaviorTypeEvent": "Händelse",
-  "dataTypeInteger": "Heltal",
-  "dataTypeFloat": "Decimaltal",
+  "dataTypeNumeric": "Numerisk",
   "dataTypeDateTime": "Datum/tid",
   "dataTypeFreeText": "Text",
   "eventTypeStart": "Start",
@@ -55,5 +51,6 @@
 
   "inlineNoteExpand": "Lägg till anteckning",
   "inlineNoteCollapse": "Dölj anteckning",
-  "inlineNoteSaved": "Inlägg sparat"
+  "inlineNoteSaved": "Inlägg sparat",
+  "dataTypeEvent": "Händelse"
 }

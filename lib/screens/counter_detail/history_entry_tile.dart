@@ -101,7 +101,7 @@ class HistoryEntryTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final isEventCounter = counter.behaviorType == BehaviorType.event;
+    final isEventCounter = counter.dataType == DataType.event;
     final hasComment =
         entry.comment != null && entry.comment!.isNotEmpty;
 

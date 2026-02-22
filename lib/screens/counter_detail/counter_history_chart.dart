@@ -21,8 +21,7 @@ class CounterHistoryChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (counter.dataType != DataType.integer &&
-        counter.dataType != DataType.float) {
+    if (counter.dataType != DataType.numeric) {
       return const SizedBox.shrink();
     }
 
