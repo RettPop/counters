@@ -1,14 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
 import '../../providers/entries_provider.dart';
+import '../../providers/photos_provider.dart';
 import 'counter_history_chart.dart';
 import 'entry_edit_sheet.dart';
 import 'history_entry_tile.dart';
@@ -38,12 +42,16 @@ class CounterDetailScreen extends ConsumerStatefulWidget {
 
 class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
   final TextEditingController _valueController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
   Timer? _autoSaveTimer;
+  bool _noteExpanded = false;
+  CounterEntry? _autoSavedEntry;
 
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
     _valueController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -69,15 +77,80 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     });
   }
 
+  void _resetInlineNote() {
+    setState(() {
+      _autoSavedEntry = null;
+      _commentController.clear();
+      _noteExpanded = false;
+    });
+  }
+
+  Future<bool> _autoSaveEntryForPhoto() async {
+    if (_autoSavedEntry != null) return true; // already saved
+    final now = DateTime.now();
+    final comment = _commentController.text.trim();
+    final entry = CounterEntry(
+      id: _uuid.v4(),
+      counterId: widget.counterId,
+      eventType: EventType.value,
+      value: _valueController.text.trim().isEmpty
+          ? null
+          : _valueController.text.trim(),
+      comment: comment.isEmpty ? null : comment,
+      recordedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await ref
+        .read(entryNotifierProvider(widget.counterId).notifier)
+        .addEntry(entry);
+    if (!mounted) return false;
+    setState(() {
+      _autoSavedEntry = entry;
+      _valueController.clear();
+      _commentController.clear(); // comment was saved with the entry
+    });
+    return true;
+  }
+
+  Future<void> _pickInlinePhoto(ImageSource source) async {
+    // Auto-save entry first (transitions to Mode B)
+    final saved = await _autoSaveEntryForPhoto();
+    if (!saved) return;
+
+    final picked =
+        await ImagePicker().pickImage(source: source, imageQuality: 85);
+    if (picked == null) return;
+    final dir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${dir.path}/entry_photos');
+    if (!await photosDir.exists()) await photosDir.create(recursive: true);
+    final ext = picked.path.split('.').last;
+    final photoId = _uuid.v4();
+    final dest = '${photosDir.path}/$photoId.$ext';
+    await File(picked.path).copy(dest);
+    final photo = EntryPhoto(
+      id: photoId,
+      entryId: _autoSavedEntry!.id,
+      localPath: dest,
+      createdAt: DateTime.now(),
+    );
+    if (!mounted) return;
+    await ref
+        .read(photoNotifierProvider(_autoSavedEntry!.id).notifier)
+        .addPhoto(photo);
+  }
+
   Future<void> _logEntry() async {
     final value = _valueController.text.trim();
     if (value.isEmpty) return;
+    final comment = _commentController.text.trim();
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: widget.counterId,
       eventType: EventType.value,
       value: value,
+      comment: comment.isEmpty ? null : comment,
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
@@ -87,16 +160,19 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
         .addEntry(entry);
     if (!mounted) return;
     _valueController.clear();
+    _resetInlineNote();
   }
 
   Future<void> _logEventEntry(EventType eventType) async {
     final value = _valueController.text.trim();
+    final comment = _commentController.text.trim();
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: widget.counterId,
       eventType: eventType,
       value: value.isEmpty ? null : value,
+      comment: comment.isEmpty ? null : comment,
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
@@ -104,7 +180,8 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     await ref
         .read(entryNotifierProvider(widget.counterId).notifier)
         .addEntry(entry);
-    // Stream auto-updates; no manual invalidation needed.
+    if (!mounted) return;
+    _resetInlineNote();
   }
 
   Future<void> _handleStep(Counter counter, CounterEntry? lastEntry,
@@ -114,12 +191,14 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
     final formatted = _formatValue(newValue, counter.dataType);
+    final comment = _commentController.text.trim();
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: widget.counterId,
       eventType: EventType.value,
       value: formatted,
+      comment: comment.isEmpty ? null : comment,
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
@@ -127,7 +206,8 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     await ref
         .read(entryNotifierProvider(widget.counterId).notifier)
         .addEntry(entry);
-    // Stream auto-updates; no manual invalidation needed.
+    if (!mounted) return;
+    _resetInlineNote();
   }
 
   Future<void> _pickDateTime() async {
@@ -313,6 +393,138 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
     );
   }
 
+  Widget _buildInlineNoteSection(AppLocalizations l10n) {
+    final hasContent =
+        _commentController.text.isNotEmpty || _autoSavedEntry != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Toggle row
+          InkWell(
+            onTap: () => setState(() => _noteExpanded = !_noteExpanded),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    _noteExpanded
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _noteExpanded ? l10n.inlineNoteCollapse : l10n.inlineNoteExpand,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  if (!_noteExpanded && hasContent) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.amber,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded body
+          if (_noteExpanded) ...[
+            const SizedBox(height: 8),
+            if (_autoSavedEntry == null) ...[
+              // Mode A: pre-save
+              TextField(
+                controller: _commentController,
+                decoration: InputDecoration(labelText: l10n.fieldComment),
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 8),
+              _InlineAddPhotoButton(
+                onGallery: () => _pickInlinePhoto(ImageSource.gallery),
+                onCamera: () => _pickInlinePhoto(ImageSource.camera),
+                l10n: l10n,
+              ),
+            ] else ...[
+              // Mode B: post-auto-save
+              Text(
+                '${l10n.inlineNoteSaved} — ${_formatRecordedAt(_autoSavedEntry!.recordedAt)}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              // Photo strip
+              Consumer(
+                builder: (context, ref, _) {
+                  final photosAsync =
+                      ref.watch(photosForEntryProvider(_autoSavedEntry!.id));
+                  final photos = photosAsync.valueOrNull ?? [];
+                  return SizedBox(
+                    height: 80,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: photos.length,
+                      itemBuilder: (context, index) {
+                        final photo = photos[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(photo.localPath),
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 72,
+                                height: 72,
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.broken_image),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              _InlineAddPhotoButton(
+                onGallery: () => _pickInlinePhoto(ImageSource.gallery),
+                onCamera: () => _pickInlinePhoto(ImageSource.camera),
+                l10n: l10n,
+              ),
+              const SizedBox(height: 8),
+              // Comment field for next log
+              TextField(
+                controller: _commentController,
+                decoration: InputDecoration(labelText: l10n.fieldComment),
+                maxLines: 3,
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatRecordedAt(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} $h:$m';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -365,7 +577,12 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 child: _buildInputSection(l10n, counter, lastEntry),
               ),
 
-              // 3. Chart (Step 17)
+              // 3. Inline note section
+              SliverToBoxAdapter(
+                child: _buildInlineNoteSection(l10n),
+              ),
+
+              // 4. Chart
               SliverToBoxAdapter(
                 child: CounterHistoryChart(
                   entries: entries,
@@ -373,7 +590,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 ),
               ),
 
-              // 4. History header
+              // 5. History header
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -385,7 +602,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 ),
               ),
 
-              // 5. History entries
+              // 6. History entries
               SliverList.builder(
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
@@ -404,6 +621,38 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Compact add-photo button for the inline note section.
+class _InlineAddPhotoButton extends StatelessWidget {
+  const _InlineAddPhotoButton({
+    required this.onGallery,
+    required this.onCamera,
+    required this.l10n,
+  });
+
+  final VoidCallback onGallery;
+  final VoidCallback onCamera;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: onGallery,
+          icon: const Icon(Icons.photo_library_outlined, size: 16),
+          label: Text(l10n.buttonFromGallery),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: onCamera,
+          icon: const Icon(Icons.camera_alt_outlined, size: 16),
+          label: Text(l10n.buttonCamera),
+        ),
+      ],
     );
   }
 }

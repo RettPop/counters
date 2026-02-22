@@ -170,4 +170,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get errorCounterNotFound => 'Räknare hittades inte';
+
+  @override
+  String get inlineNoteExpand => 'Lägg till anteckning';
+
+  @override
+  String get inlineNoteCollapse => 'Dölj anteckning';
+
+  @override
+  String get inlineNoteSaved => 'Inlägg sparat';
 }

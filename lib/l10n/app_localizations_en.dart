@@ -169,4 +169,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorCounterNotFound => 'Counter not found';
+
+  @override
+  String get inlineNoteExpand => 'Add note';
+
+  @override
+  String get inlineNoteCollapse => 'Hide note';
+
+  @override
+  String get inlineNoteSaved => 'Entry saved';
 }

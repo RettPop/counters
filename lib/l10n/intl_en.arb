@@ -166,5 +166,14 @@
     }
   },
   "errorCounterNotFound": "Counter not found",
-  "@errorCounterNotFound": {}
+  "@errorCounterNotFound": {},
+
+  "inlineNoteExpand": "Add note",
+  "@inlineNoteExpand": {},
+
+  "inlineNoteCollapse": "Hide note",
+  "@inlineNoteCollapse": {},
+
+  "inlineNoteSaved": "Entry saved",
+  "@inlineNoteSaved": {}
 }

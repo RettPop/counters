@@ -51,5 +51,9 @@
   "editEntryTitle": "Redigera post",
   "noColorOption": "Ingen",
   "errorGeneric": "Fel: {message}",
-  "errorCounterNotFound": "Räknare hittades inte"
+  "errorCounterNotFound": "Räknare hittades inte",
+
+  "inlineNoteExpand": "Lägg till anteckning",
+  "inlineNoteCollapse": "Dölj anteckning",
+  "inlineNoteSaved": "Inlägg sparat"
 }

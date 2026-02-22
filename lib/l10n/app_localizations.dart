@@ -409,6 +409,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Counter not found'**
   String get errorCounterNotFound;
+
+  /// No description provided for @inlineNoteExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get inlineNoteExpand;
+
+  /// No description provided for @inlineNoteCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide note'**
+  String get inlineNoteCollapse;
+
+  /// No description provided for @inlineNoteSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry saved'**
+  String get inlineNoteSaved;
 }
 
 class _AppLocalizationsDelegate
