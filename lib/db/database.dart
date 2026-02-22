@@ -33,10 +33,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await customStatement(
-          "UPDATE counters SET dataType = 'numeric' WHERE dataType IN ('integer', 'float') AND behaviorType != 'event'",
+          "UPDATE counters SET data_type = 'numeric' WHERE data_type IN ('integer', 'float') AND behavior_type != 'event'",
         );
         await customStatement(
-          "UPDATE counters SET dataType = 'event' WHERE behaviorType = 'event'",
+          "UPDATE counters SET data_type = 'event' WHERE behavior_type = 'event'",
         );
       }
     },
