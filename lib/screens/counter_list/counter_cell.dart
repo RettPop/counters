@@ -29,6 +29,13 @@ String _formatValue(double val) {
   return s;
 }
 
+/// Returns the icon for the event step button based on [lastEntry]'s state.
+IconData eventStepIcon(CounterEntry? lastEntry) {
+  if (lastEntry == null) return Icons.play_arrow;
+  if (lastEntry.eventType == EventType.finish) return Icons.replay;
+  return Icons.fast_forward; // start or continueEvent → advance
+}
+
 class CounterCell extends ConsumerWidget {
   const CounterCell({super.key, required this.counter});
 
@@ -39,6 +46,8 @@ class CounterCell extends ConsumerWidget {
     if (double.tryParse(counter.changeStep!) == null) return false;
     return counter.dataType == DataType.numeric;
   }
+
+  bool get _showEventAction => counter.dataType == DataType.event;
 
   /// Applies a step change to the counter. [multiplier] is +1.0 for increment,
   /// -1.0 for decrement.
@@ -90,6 +99,23 @@ class CounterCell extends ConsumerWidget {
     );
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
     // Stream auto-updates; no manual invalidation needed.
+  }
+
+  Future<void> _handleEventStep(WidgetRef ref, CounterEntry? lastEntry) async {
+    final eventType =
+        (lastEntry == null || lastEntry.eventType == EventType.finish)
+            ? EventType.start
+            : EventType.continueEvent;
+    final now = DateTime.now();
+    final entry = CounterEntry(
+      id: _uuid.v4(),
+      counterId: counter.id,
+      eventType: eventType,
+      recordedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
   }
 
   @override
@@ -177,6 +203,22 @@ class CounterCell extends ConsumerWidget {
                       icon: const Icon(Icons.add),
                       onPressed: () => _handleIncrement(ref, lastEntry),
                       tooltip: 'Increment',
+                    ),
+                  ],
+                ),
+              ],
+              if (_showEventAction) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Spacer(),
+                    IconButton(
+                      icon: Icon(eventStepIcon(lastEntry)),
+                      onPressed: () => _handleEventStep(ref, lastEntry),
+                      tooltip: (lastEntry?.eventType == EventType.start ||
+                                lastEntry?.eventType == EventType.continueEvent)
+                          ? l10n.buttonContinue
+                          : l10n.buttonStart,
                     ),
                   ],
                 ),
