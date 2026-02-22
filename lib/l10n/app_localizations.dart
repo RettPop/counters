@@ -314,12 +314,6 @@ abstract class AppLocalizations {
   /// **'Text'**
   String get dataTypeFreeText;
 
-  /// No description provided for @dataTypeEvent.
-  ///
-  /// In en, this message translates to:
-  /// **'Event'**
-  String get dataTypeEvent;
-
   /// No description provided for @eventTypeStart.
   ///
   /// In en, this message translates to:
@@ -409,6 +403,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Entry saved'**
   String get inlineNoteSaved;
+
+  /// No description provided for @dataTypeEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get dataTypeEvent;
 }
 
 class _AppLocalizationsDelegate

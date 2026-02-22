@@ -119,9 +119,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataTypeFreeText => 'Text';
 
   @override
-  String get dataTypeEvent => 'Event';
-
-  @override
   String get eventTypeStart => 'Start';
 
   @override
@@ -169,4 +166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inlineNoteSaved => 'Entry saved';
+
+  @override
+  String get dataTypeEvent => 'Event';
 }

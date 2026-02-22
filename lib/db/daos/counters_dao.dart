@@ -87,6 +87,7 @@ class CountersDao extends DatabaseAccessor<AppDatabase>
       id: Value(c.id),
       name: Value(c.name),
       description: Value(c.description),
+      behaviorType: const Value('value'), // column retained for compat; existing DBs may have NOT NULL
       dataType: Value(c.dataType.name),
       tags: Value(jsonEncode(c.tags)),
       changeStep: Value(c.changeStep),

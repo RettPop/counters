@@ -119,9 +119,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get dataTypeFreeText => 'Text';
 
   @override
-  String get dataTypeEvent => 'Händelse';
-
-  @override
   String get eventTypeStart => 'Start';
 
   @override
@@ -170,4 +167,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get inlineNoteSaved => 'Inlägg sparat';
+
+  @override
+  String get dataTypeEvent => 'Händelse';
 }
