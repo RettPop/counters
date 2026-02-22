@@ -34,6 +34,13 @@ migrate_working_dir/
 .pub/
 /build/
 
+# iOS generated files
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
 # Symbolication related
 app.*.symbols
 
