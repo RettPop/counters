@@ -33,7 +33,7 @@ String _formatValue(double val) {
 IconData eventStepIcon(CounterEntry? lastEntry) {
   if (lastEntry == null) return Icons.play_arrow;
   if (lastEntry.eventType == EventType.finish) return Icons.replay;
-  return Icons.fast_forward; // start or continueEvent → advance
+  return Icons.fast_forward; // ongoing (start/continueEvent) → advance
 }
 
 class CounterCell extends ConsumerWidget {
@@ -116,6 +116,7 @@ class CounterCell extends ConsumerWidget {
       updatedAt: now,
     );
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
+    // Stream auto-updates; no manual invalidation needed.
   }
 
   @override
@@ -215,8 +216,7 @@ class CounterCell extends ConsumerWidget {
                     IconButton(
                       icon: Icon(eventStepIcon(lastEntry)),
                       onPressed: () => _handleEventStep(ref, lastEntry),
-                      tooltip: (lastEntry?.eventType == EventType.start ||
-                                lastEntry?.eventType == EventType.continueEvent)
+                      tooltip: (lastEntry != null && lastEntry.eventType != EventType.finish)
                           ? l10n.buttonContinue
                           : l10n.buttonStart,
                     ),
