@@ -222,6 +222,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               TextFormField(
                 controller: _nameController,
                 autofocus: isCreating,
+                textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   labelText: l10n.fieldName,
                   border: const OutlineInputBorder(),
@@ -238,6 +239,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
               // 2. Description
               TextFormField(
                 controller: _descriptionController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   labelText: l10n.fieldDescription,
                   border: const OutlineInputBorder(),
