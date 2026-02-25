@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -18,6 +19,7 @@ import 'entry_edit_sheet.dart';
 import 'history_entry_tile.dart';
 
 const _uuid = Uuid();
+final _datetimeFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
 String _formatValue(double val) {
   String s = val.toStringAsFixed(2);
@@ -42,6 +44,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
   Timer? _autoSaveTimer;
   bool _noteExpanded = false;
   CounterEntry? _autoSavedEntry;
+  bool _datetimePreFilled = false;
 
   @override
   void dispose() {
@@ -228,7 +231,7 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
       time.hour,
       time.minute,
     );
-    _valueController.text = combined.toIso8601String();
+    _valueController.text = _datetimeFormat.format(combined);
   }
 
   void _onEntryTap(CounterEntry entry) {
@@ -353,21 +356,39 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.start),
-                    child: Text(l10n.buttonStart),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.play_arrow),
+                        Text(l10n.buttonStart),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.continueEvent),
-                    child: Text(l10n.buttonContinue),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.fast_forward),
+                        Text(l10n.buttonContinue),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: () => _logEventEntry(EventType.finish),
-                    child: Text(l10n.buttonFinish),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stop),
+                        Text(l10n.buttonFinish),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -543,6 +564,15 @@ class _CounterDetailScreenState extends ConsumerState<CounterDetailScreen> {
             appBar: AppBar(),
             body: Center(child: Text(l10n.errorCounterNotFound)),
           );
+        }
+
+        if (counter.dataType == DataType.datetime && !_datetimePreFilled) {
+          _datetimePreFilled = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _valueController.text.isEmpty) {
+              _valueController.text = _datetimeFormat.format(DateTime.now());
+            }
+          });
         }
 
         final lastEntry = lastEntryAsync.valueOrNull;

@@ -194,11 +194,14 @@ class CounterCell extends ConsumerWidget {
                       onPressed: () => _handleDecrement(ref, lastEntry),
                       tooltip: 'Decrement',
                     ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.radio_button_checked),
-                      onPressed: () => _handleTimestamp(ref, lastEntry),
-                      tooltip: 'Record timestamp',
+                    Expanded(
+                      child: Center(
+                        child: IconButton(
+                          icon: const Icon(Icons.radio_button_checked),
+                          onPressed: () => _handleTimestamp(ref, lastEntry),
+                          tooltip: 'Record timestamp',
+                        ),
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.add),

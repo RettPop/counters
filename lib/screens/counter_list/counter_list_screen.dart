@@ -42,8 +42,53 @@ class CounterListScreen extends ConsumerWidget {
 
           return ListView.builder(
             itemCount: counters.length,
-            itemBuilder: (context, index) =>
-                CounterCell(counter: counters[index]),
+            itemBuilder: (context, index) {
+              final counter = counters[index];
+              return Dismissible(
+                key: ValueKey(counter.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  color: Theme.of(context).colorScheme.error,
+                  child: Icon(
+                    Icons.delete_outline,
+                    color: Theme.of(context).colorScheme.onError,
+                  ),
+                ),
+                confirmDismiss: (_) async {
+                  return await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.deleteCounterDialogTitle),
+                      content:
+                          Text(l10n.deleteCounterDialogBody(counter.name)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l10n.buttonCancel),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: TextButton.styleFrom(
+                            foregroundColor:
+                                Theme.of(context).colorScheme.error,
+                          ),
+                          child: Text(l10n.buttonDelete),
+                        ),
+                      ],
+                    ),
+                  ) ??
+                      false;
+                },
+                onDismissed: (_) {
+                  ref
+                      .read(counterNotifierProvider.notifier)
+                      .deleteCounter(counter.id);
+                },
+                child: CounterCell(counter: counter),
+              );
+            },
           );
         },
       ),
