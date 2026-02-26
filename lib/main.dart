@@ -7,12 +7,17 @@ import 'models/models.dart';
 import 'screens/counter_detail/counter_detail_screen.dart';
 import 'screens/counter_edit/counter_edit_screen.dart';
 import 'screens/counter_list/counter_list_screen.dart';
+import 'screens/settings/settings_screen.dart';
 
 final _router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
       builder: (context, state) => const CounterListScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
     ),
     GoRoute(
       path: '/counter/new',

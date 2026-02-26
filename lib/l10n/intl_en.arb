@@ -166,5 +166,14 @@
   "@inlineNoteSaved": {},
 
   "dataTypeEvent": "Event",
-  "@dataTypeEvent": {}
+  "@dataTypeEvent": {},
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": {},
+
+  "settingsSyncTitle": "Synchronize",
+  "@settingsSyncTitle": {},
+
+  "settingsSyncDescription": "Synchronize between your devices",
+  "@settingsSyncDescription": {}
 }

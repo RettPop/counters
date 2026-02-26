@@ -409,6 +409,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Event'**
   String get dataTypeEvent;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronize'**
+  String get settingsSyncTitle;
+
+  /// No description provided for @settingsSyncDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronize between your devices'**
+  String get settingsSyncDescription;
 }
 
 class _AppLocalizationsDelegate

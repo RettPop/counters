@@ -169,4 +169,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataTypeEvent => 'Event';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsSyncTitle => 'Synchronize';
+
+  @override
+  String get settingsSyncDescription => 'Synchronize between your devices';
 }

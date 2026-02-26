@@ -52,5 +52,9 @@
   "inlineNoteExpand": "Lägg till anteckning",
   "inlineNoteCollapse": "Dölj anteckning",
   "inlineNoteSaved": "Inlägg sparat",
-  "dataTypeEvent": "Händelse"
+  "dataTypeEvent": "Händelse",
+
+  "settingsTitle": "Inställningar",
+  "settingsSyncTitle": "Synkronisera",
+  "settingsSyncDescription": "Synkronisera mellan dina enheter"
 }

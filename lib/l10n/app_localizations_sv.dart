@@ -170,4 +170,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dataTypeEvent => 'Händelse';
+
+  @override
+  String get settingsTitle => 'Inställningar';
+
+  @override
+  String get settingsSyncTitle => 'Synkronisera';
+
+  @override
+  String get settingsSyncDescription => 'Synkronisera mellan dina enheter';
 }
