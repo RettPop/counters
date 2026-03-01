@@ -22,6 +22,15 @@ String _formatLastChanged(DateTime dt) {
   return '$d $mon $y, $h:$m';
 }
 
+IconData _dataTypeIcon(DataType type) {
+  return switch (type) {
+    DataType.numeric  => Icons.exposure,
+    DataType.datetime => Icons.calendar_today,
+    DataType.freeText => Icons.notes,
+    DataType.event    => Icons.flag,
+  };
+}
+
 String _formatValue(double val) {
   String s = val.toStringAsFixed(2);
   s = s.replaceAll(RegExp(r'0+$'), '');
@@ -46,6 +55,9 @@ class CounterCell extends ConsumerWidget {
     if (double.tryParse(counter.changeStep!) == null) return false;
     return counter.dataType == DataType.numeric;
   }
+
+  bool get _showNumericTimestamp =>
+      counter.dataType == DataType.numeric && !_showQuickActions;
 
   bool get _isEventCounter => counter.dataType == DataType.event;
 
@@ -230,6 +242,22 @@ class CounterCell extends ConsumerWidget {
                   );
                 }),
               ],
+              if (_showNumericTimestamp) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: IconButton(
+                          icon: const Icon(Icons.radio_button_checked),
+                          onPressed: () => _handleTimestamp(ref, lastEntry),
+                          tooltip: 'Record timestamp',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (_showTextAction) ...[
                 const SizedBox(height: 8),
                 Row(
@@ -291,18 +319,31 @@ class CounterCell extends ConsumerWidget {
                     ],
                   ),
               ],
-              if (lastEntry != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _formatLastChanged(lastEntry.recordedAt),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.55),
-                      ),
-                ),
-              ],
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    _dataTypeIcon(counter.dataType),
+                    size: 14,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.55),
+                  ),
+                  if (lastEntry != null) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatLastChanged(lastEntry.recordedAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.55),
+                          ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
         ),
