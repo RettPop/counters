@@ -47,7 +47,9 @@ class CounterCell extends ConsumerWidget {
     return counter.dataType == DataType.numeric;
   }
 
-  bool get _showEventAction => counter.dataType == DataType.event;
+  bool get _isEventCounter => counter.dataType == DataType.event;
+
+  bool get _showTextAction => counter.dataType == DataType.freeText;
 
   /// Applies a step change to the counter. [multiplier] is +1.0 for increment,
   /// -1.0 for decrement.
@@ -119,6 +121,19 @@ class CounterCell extends ConsumerWidget {
     // Stream auto-updates; no manual invalidation needed.
   }
 
+  Future<void> _handleEventFinish(WidgetRef ref) async {
+    final now = DateTime.now();
+    final entry = CounterEntry(
+      id: _uuid.v4(),
+      counterId: counter.id,
+      eventType: EventType.finish,
+      recordedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    );
+    await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -187,13 +202,38 @@ class CounterCell extends ConsumerWidget {
               ],
               if (_showQuickActions) ...[
                 const SizedBox(height: 8),
+                Builder(builder: (context) {
+                  final stepLabel =
+                      _formatValue(double.parse(counter.changeStep!));
+                  return Row(
+                    children: [
+                      IconButton(
+                        icon: Text('−$stepLabel'),
+                        onPressed: () => _handleDecrement(ref, lastEntry),
+                        tooltip: 'Decrement',
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: IconButton(
+                            icon: const Icon(Icons.radio_button_checked),
+                            onPressed: () => _handleTimestamp(ref, lastEntry),
+                            tooltip: 'Record timestamp',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Text('+$stepLabel'),
+                        onPressed: () => _handleIncrement(ref, lastEntry),
+                        tooltip: 'Increment',
+                      ),
+                    ],
+                  );
+                }),
+              ],
+              if (_showTextAction) ...[
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () => _handleDecrement(ref, lastEntry),
-                      tooltip: 'Decrement',
-                    ),
                     Expanded(
                       child: Center(
                         child: IconButton(
@@ -203,28 +243,53 @@ class CounterCell extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () => _handleIncrement(ref, lastEntry),
-                      tooltip: 'Increment',
-                    ),
                   ],
                 ),
               ],
-              if (_showEventAction) ...[
+              if (_isEventCounter) ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Spacer(),
-                    IconButton(
-                      icon: Icon(eventStepIcon(lastEntry)),
-                      onPressed: () => _handleEventStep(ref, lastEntry),
-                      tooltip: (lastEntry != null && lastEntry.eventType != EventType.finish)
-                          ? l10n.buttonContinue
-                          : l10n.buttonStart,
-                    ),
-                  ],
-                ),
+                if (lastEntry == null || lastEntry.eventType == EventType.finish)
+                  // Not started or finished → single centered button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: IconButton(
+                            icon: Icon(lastEntry == null
+                                ? Icons.play_arrow
+                                : Icons.replay),
+                            onPressed: () =>
+                                _handleEventStep(ref, lastEntry),
+                            tooltip: l10n.buttonStart,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  // Ongoing → centered ⊙ (continue) + right-aligned finish.
+                  // The SizedBox mirrors the Finish button width so that
+                  // Expanded(Center(...)) lands on the true row centre.
+                  Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      Expanded(
+                        child: Center(
+                          child: IconButton(
+                            icon: const Icon(Icons.radio_button_checked),
+                            onPressed: () =>
+                                _handleEventStep(ref, lastEntry),
+                            tooltip: l10n.buttonContinue,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.stop),
+                        onPressed: () => _handleEventFinish(ref),
+                        tooltip: l10n.buttonFinish,
+                      ),
+                    ],
+                  ),
               ],
               if (lastEntry != null) ...[
                 const SizedBox(height: 4),
