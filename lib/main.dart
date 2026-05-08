@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'l10n/app_localizations.dart';
 import 'models/models.dart';
+import 'theme/app_theme.dart';
 import 'screens/counter_detail/counter_detail_screen.dart';
 import 'screens/counter_edit/counter_edit_screen.dart';
 import 'screens/counter_list/counter_list_screen.dart';
@@ -58,10 +59,7 @@ class CountersApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Counters',
-      theme: ThemeData(
-        colorSchemeSeed: Colors.teal,
-        useMaterial3: true,
-      ),
+      theme: buildAppTheme(),
       routerConfig: _router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

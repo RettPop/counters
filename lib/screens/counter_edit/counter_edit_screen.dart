@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/counters_provider.dart';
+import '../../theme/app_theme.dart';
 
 const _uuid = Uuid();
 
@@ -33,7 +34,6 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
   late DataType _selectedDataType;
   late List<String> _tags;
-  late int? _selectedColor;
   late bool _autoSave;
 
   // The resolved counter: set immediately from [initialCounter] when available,
@@ -42,19 +42,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
   Counter? _counter;
   bool _loadedFromDb = false;
 
-  static const _colorOptions = <int?>[
-    null,
-    0xFFF44336, // Colors.red
-    0xFFFF9800, // Colors.orange
-    0xFFFFEB3B, // Colors.yellow
-    0xFF4CAF50, // Colors.green
-    0xFF009688, // Colors.teal
-    0xFF2196F3, // Colors.blue
-    0xFF9C27B0, // Colors.purple
-    0xFFE91E63, // Colors.pink
-    0xFF795548, // Colors.brown
-    0xFF9E9E9E, // Colors.grey
-  ];
+  late String _selectedTintKey;
 
   @override
   void initState() {
@@ -70,7 +58,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     _tagInputController = TextEditingController();
     _selectedDataType = c?.dataType ?? DataType.numeric;
     _tags = List<String>.from(c?.tags ?? []);
-    _selectedColor = c?.backgroundColor;
+    _selectedTintKey = tintKeyFromBackgroundColor(c?.backgroundColor);
     _autoSave = c?.autoSave ?? false;
   }
 
@@ -83,7 +71,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
     setState(() {
       _selectedDataType = c.dataType;
       _tags = List<String>.from(c.tags);
-      _selectedColor = c.backgroundColor;
+      _selectedTintKey = tintKeyFromBackgroundColor(c.backgroundColor);
       _autoSave = c.autoSave;
     });
   }
@@ -112,7 +100,7 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
       changeStep: _changeStepController.text.trim().isEmpty
           ? null
           : _changeStepController.text.trim(),
-      backgroundColor: _selectedColor,
+      backgroundColor: counterTints[_selectedTintKey]!.dot.toARGB32(),
       autoSave: _autoSave,
       createdAt: isCreating ? now : _counter!.createdAt,
       updatedAt: now,
@@ -370,35 +358,49 @@ class _CounterEditScreenState extends ConsumerState<CounterEditScreen> {
 
   Widget _buildColorPicker() {
     return Wrap(
-      children: _colorOptions.map((colorValue) {
-        final isSelected = _selectedColor == colorValue;
-        final color = colorValue != null ? Color(colorValue) : null;
+      spacing: 6,
+      runSpacing: 8,
+      children: counterTints.entries.map((entry) {
+        final key = entry.key;
+        final tint = entry.value;
+        final isSelected = _selectedTintKey == key;
 
         return GestureDetector(
-          onTap: () => setState(() => _selectedColor = colorValue),
+          onTap: () => setState(() {
+            _selectedTintKey = key;
+          }),
           child: Container(
-            width: 32,
-            height: 32,
-            margin: const EdgeInsets.all(4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: color ?? Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(999),
+              color: tint.bg,
               border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade400,
-                width: isSelected ? 2.5 : 1,
+                color: isSelected ? tint.ink : Colors.transparent,
+                width: isSelected ? 2 : 1,
               ),
             ),
-            child: isSelected
-                ? Icon(
-                    Icons.check,
-                    size: 18,
-                    color: colorValue != null ? Colors.white : Colors.black54,
-                  )
-                : colorValue == null
-                    ? Icon(Icons.close, size: 16, color: Colors.grey.shade500)
-                    : null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: tint.dot,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  tint.name,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: tint.ink,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),

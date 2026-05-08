@@ -49,6 +49,9 @@
   "buttonFinish": "Finish",
   "@buttonFinish": {},
 
+  "buttonReLog": "Re-Log",
+  "@buttonReLog": {},
+
   "buttonAddPhoto": "Add photo",
   "@buttonAddPhoto": {},
 

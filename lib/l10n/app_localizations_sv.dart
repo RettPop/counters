@@ -57,6 +57,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get buttonFinish => 'Avsluta';
 
   @override
+  String get buttonReLog => 'Logga igen';
+
+  @override
   String get buttonAddPhoto => 'Lägg till foto';
 
   @override

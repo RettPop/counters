@@ -57,6 +57,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buttonFinish => 'Finish';
 
   @override
+  String get buttonReLog => 'Re-Log';
+
+  @override
   String get buttonAddPhoto => 'Add photo';
 
   @override

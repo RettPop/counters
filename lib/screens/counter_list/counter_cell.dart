@@ -6,30 +6,9 @@ import 'package:uuid/uuid.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/entries_provider.dart';
+import '../../theme/app_theme.dart';
 
 const _uuid = Uuid();
-
-String _formatLastChanged(DateTime dt) {
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-  final d = dt.day.toString().padLeft(2, '0');
-  final mon = months[dt.month - 1];
-  final y = dt.year;
-  final h = dt.hour.toString().padLeft(2, '0');
-  final m = dt.minute.toString().padLeft(2, '0');
-  return '$d $mon $y, $h:$m';
-}
-
-IconData _dataTypeIcon(DataType type) {
-  return switch (type) {
-    DataType.numeric  => Icons.exposure,
-    DataType.datetime => Icons.calendar_today,
-    DataType.freeText => Icons.notes,
-    DataType.event    => Icons.flag,
-  };
-}
 
 String _formatValue(double val) {
   String s = val.toStringAsFixed(2);
@@ -38,11 +17,27 @@ String _formatValue(double val) {
   return s;
 }
 
-/// Returns the icon for the event step button based on [lastEntry]'s state.
-IconData eventStepIcon(CounterEntry? lastEntry) {
-  if (lastEntry == null) return Icons.play_arrow;
-  if (lastEntry.eventType == EventType.finish) return Icons.replay;
-  return Icons.fast_forward; // ongoing (start/continueEvent) → advance
+String _relTime(DateTime dt) {
+  final now = DateTime.now();
+  final diff = now.difference(dt).inSeconds;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return '${diff ~/ 60}m ago';
+  if (diff < 86400) return '${diff ~/ 3600}h ago';
+  if (diff < 86400 * 7) return '${diff ~/ 86400}d ago';
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return '${dt.day} ${months[dt.month - 1]}';
+}
+
+String _dataTypeLabel(DataType type) {
+  return switch (type) {
+    DataType.numeric => 'Numeric',
+    DataType.datetime => 'Moment',
+    DataType.freeText => 'Text',
+    DataType.event => 'Event',
+  };
 }
 
 class CounterCell extends ConsumerWidget {
@@ -50,21 +45,12 @@ class CounterCell extends ConsumerWidget {
 
   final Counter counter;
 
-  bool get _showQuickActions {
+  bool get _hasStep {
     if (counter.changeStep == null) return false;
     if (double.tryParse(counter.changeStep!) == null) return false;
     return counter.dataType == DataType.numeric;
   }
 
-  bool get _showNumericTimestamp =>
-      counter.dataType == DataType.numeric && !_showQuickActions;
-
-  bool get _isEventCounter => counter.dataType == DataType.event;
-
-  bool get _showTextAction => counter.dataType == DataType.freeText;
-
-  /// Applies a step change to the counter. [multiplier] is +1.0 for increment,
-  /// -1.0 for decrement.
   Future<void> _handleStep(
     WidgetRef ref,
     CounterEntry? lastEntry,
@@ -75,7 +61,6 @@ class CounterCell extends ConsumerWidget {
     final lastValue = lastEntry?.numericValue ?? 0;
     final newValue = lastValue + (step * multiplier);
     final formatted = _formatValue(newValue);
-
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
@@ -86,33 +71,21 @@ class CounterCell extends ConsumerWidget {
       createdAt: now,
       updatedAt: now,
     );
-
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    // Stream auto-updates; no manual invalidation needed.
   }
 
-  Future<void> _handleDecrement(WidgetRef ref, CounterEntry? lastEntry) =>
-      _handleStep(ref, lastEntry, -1.0);
-
-  Future<void> _handleIncrement(WidgetRef ref, CounterEntry? lastEntry) =>
-      _handleStep(ref, lastEntry, 1.0);
-
   Future<void> _handleTimestamp(WidgetRef ref, CounterEntry? lastEntry) async {
-    // value is nullable in the DB schema (counter_entries_table.dart), so
-    // carrying forward the previous entry's value (or null for the first
-    // timestamp) is intentional.
     final now = DateTime.now();
     final entry = CounterEntry(
       id: _uuid.v4(),
       counterId: counter.id,
       eventType: EventType.value,
-      value: lastEntry?.value, // nullable — matches the nullable DB column
+      value: lastEntry?.value,
       recordedAt: now,
       createdAt: now,
       updatedAt: now,
     );
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    // Stream auto-updates; no manual invalidation needed.
   }
 
   Future<void> _handleEventStep(WidgetRef ref, CounterEntry? lastEntry) async {
@@ -130,7 +103,6 @@ class CounterCell extends ConsumerWidget {
       updatedAt: now,
     );
     await ref.read(entryNotifierProvider(counter.id).notifier).addEntry(entry);
-    // Stream auto-updates; no manual invalidation needed.
   }
 
   Future<void> _handleEventFinish(WidgetRef ref) async {
@@ -150,201 +122,481 @@ class CounterCell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final lastEntryAsync = ref.watch(lastEntryStreamProvider(counter.id));
-
-    final backgroundColor = counter.backgroundColor != null
-        ? Color(counter.backgroundColor!)
-        : Theme.of(context).colorScheme.surface;
-
-    final currentValueText = lastEntryAsync.when(
-      loading: () => const Text('...'),
-      data: (entry) => Text(entry?.value ?? l10n.noValuePlaceholder),
-      error: (_, __) => Text(l10n.noValuePlaceholder),
-    );
-
     final lastEntry = lastEntryAsync.valueOrNull;
+    final tint = tintFromBackgroundColor(counter.backgroundColor);
 
-    return Card(
-      color: backgroundColor,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/counter/${counter.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
+    final isNumeric = counter.dataType == DataType.numeric;
+    final isEvent = counter.dataType == DataType.event;
+    final isText = counter.dataType == DataType.freeText;
+    final isDT = counter.dataType == DataType.datetime;
+    final isRunning = isEvent &&
+        lastEntry != null &&
+        lastEntry.eventType != EventType.finish;
+
+    return GestureDetector(
+      onTap: () => context.push('/counter/${counter.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.line),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Top row: name + value ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: tint.dot,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              counter.name,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2,
+                                color: AppColors.ink,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, top: 4),
+                        child: Row(
+                          children: [
+                            Text(
+                              _dataTypeLabel(counter.dataType),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.ink3,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '\u00b7',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.ink4,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              lastEntry != null
+                                  ? _relTime(lastEntry.recordedAt)
+                                  : 'no entries',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.ink3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Right-aligned value display ──
+                if (isNumeric)
+                  _NumericValue(
+                    value: lastEntry?.value,
+                    placeholder: l10n.noValuePlaceholder,
+                  ),
+                if (isEvent) _EventPill(running: isRunning, lastEntry: lastEntry),
+                if (isText)
+                  _TextQuote(
+                    value: lastEntry?.value,
+                    placeholder: l10n.noValuePlaceholder,
+                  ),
+                if (isDT)
+                  _DatetimeValue(
+                    value: lastEntry?.value,
+                    placeholder: l10n.noValuePlaceholder,
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── Action buttons ──
+            Row(
+              children: [
+                if (isNumeric && _hasStep) ...[
+                  _ActionBtn(
+                    tint: tint,
+                    big: true,
+                    onTap: () => _handleStep(ref, lastEntry, -1.0),
                     child: Text(
-                      counter.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      '\u2212${_formatValue(double.parse(counter.changeStep!))}',
+                      style: const TextStyle(
+                        fontFamily: 'SF Mono',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                  DefaultTextStyle(
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ) ??
-                        const TextStyle(),
-                    child: currentValueText,
+                  const SizedBox(width: 8),
+                  _ActionBtn(
+                    tint: tint,
+                    big: true,
+                    primary: true,
+                    onTap: () => _handleStep(ref, lastEntry, 1.0),
+                    child: Text(
+                      '+${_formatValue(double.parse(counter.changeStep!))}',
+                      style: const TextStyle(
+                        fontFamily: 'SF Mono',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              if (counter.tags.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: counter.tags
-                      .map(
-                        (tag) => Chip(
-                          label: Text(tag),
-                          labelStyle: const TextStyle(fontSize: 11),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              if (_showQuickActions) ...[
-                const SizedBox(height: 8),
-                Builder(builder: (context) {
-                  final stepLabel =
-                      _formatValue(double.parse(counter.changeStep!));
-                  return Row(
-                    children: [
-                      IconButton(
-                        icon: Text('−$stepLabel'),
-                        onPressed: () => _handleDecrement(ref, lastEntry),
-                        tooltip: 'Decrement',
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: IconButton(
-                            icon: const Icon(Icons.radio_button_checked),
-                            onPressed: () => _handleTimestamp(ref, lastEntry),
-                            tooltip: 'Record timestamp',
+                if (isNumeric && !_hasStep)
+                  _ActionBtn(
+                    tint: tint,
+                    wide: true,
+                    primary: true,
+                    onTap: () => context.push('/counter/${counter.id}'),
+                    child: const Text(
+                      'Log value',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                if (isEvent && !isRunning)
+                  _ActionBtn(
+                    tint: tint,
+                    wide: true,
+                    primary: true,
+                    onTap: () => _handleEventStep(ref, lastEntry),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.play_arrow, size: 16, color: tint.ink),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.buttonStart,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                if (isEvent && isRunning) ...[
+                  _ActionBtn(
+                    tint: tint,
+                    primary: true,
+                    onTap: () => _handleEventStep(ref, lastEntry),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check, size: 16, color: tint.ink),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.buttonReLog,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _ActionBtn(
+                    tint: tint,
+                    big: true,
+                    onTap: () => _handleEventFinish(ref),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.stop,
+                          size: 14,
+                          color: Color(0xFF6B3A34),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Finish',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B3A34),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (isText)
+                  _ActionBtn(
+                    tint: tint,
+                    wide: true,
+                    primary: true,
+                    onTap: () => context.push('/counter/${counter.id}'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.notes, size: 14, color: tint.ink),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'New entry',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (isDT)
+                  _ActionBtn(
+                    tint: tint,
+                    wide: true,
+                    primary: true,
+                    onTap: () => _handleTimestamp(ref, lastEntry),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today, size: 14, color: tint.ink),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.buttonReLog,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+
+            // ── Tags ──
+            if (counter.tags.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: counter.tags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: tint.dot.withAlpha(51)),
+                      color: tint.dot.withAlpha(16),
+                    ),
+                    child: Text(
+                      tag.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: tint.dot,
+                        letterSpacing: 0.3,
                       ),
-                      IconButton(
-                        icon: Text('+$stepLabel'),
-                        onPressed: () => _handleIncrement(ref, lastEntry),
-                        tooltip: 'Increment',
-                      ),
-                    ],
+                    ),
                   );
-                }),
-              ],
-              if (_showNumericTimestamp) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: IconButton(
-                          icon: const Icon(Icons.radio_button_checked),
-                          onPressed: () => _handleTimestamp(ref, lastEntry),
-                          tooltip: 'Record timestamp',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              if (_showTextAction) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: IconButton(
-                          icon: const Icon(Icons.radio_button_checked),
-                          onPressed: () => _handleTimestamp(ref, lastEntry),
-                          tooltip: 'Record timestamp',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              if (_isEventCounter) ...[
-                const SizedBox(height: 8),
-                if (lastEntry == null || lastEntry.eventType == EventType.finish)
-                  // Not started or finished → single centered button
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: IconButton(
-                            icon: Icon(lastEntry == null
-                                ? Icons.play_arrow
-                                : Icons.replay),
-                            onPressed: () =>
-                                _handleEventStep(ref, lastEntry),
-                            tooltip: l10n.buttonStart,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                else
-                  // Ongoing → centered ⊙ (continue) + right-aligned finish.
-                  // The SizedBox mirrors the Finish button width so that
-                  // Expanded(Center(...)) lands on the true row centre.
-                  Row(
-                    children: [
-                      const SizedBox(width: 48),
-                      Expanded(
-                        child: Center(
-                          child: IconButton(
-                            icon: const Icon(Icons.radio_button_checked),
-                            onPressed: () =>
-                                _handleEventStep(ref, lastEntry),
-                            tooltip: l10n.buttonContinue,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.stop),
-                        onPressed: () => _handleEventFinish(ref),
-                        tooltip: l10n.buttonFinish,
-                      ),
-                    ],
-                  ),
-              ],
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    _dataTypeIcon(counter.dataType),
-                    size: 14,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.55),
-                  ),
-                  if (lastEntry != null) ...[
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatLastChanged(lastEntry.recordedAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.55),
-                          ),
-                    ),
-                  ],
-                ],
+                }).toList(),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Value display widgets
+// ─────────────────────────────────────────────────────────────
+
+class _NumericValue extends StatelessWidget {
+  const _NumericValue({required this.value, required this.placeholder});
+  final String? value;
+  final String placeholder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      value ?? placeholder,
+      style: const TextStyle(
+        fontFamily: 'SF Mono',
+        fontSize: 28,
+        fontWeight: FontWeight.w500,
+        color: AppColors.ink,
+        letterSpacing: -1,
+        height: 1,
+      ),
+    );
+  }
+}
+
+class _EventPill extends StatelessWidget {
+  const _EventPill({required this.running, required this.lastEntry});
+  final bool running;
+  final CounterEntry? lastEntry;
+
+  String get _label {
+    if (!running) return 'Idle';
+    if (lastEntry == null) return 'Idle';
+    final elapsed = DateTime.now().difference(lastEntry!.recordedAt);
+    if (elapsed.inMinutes < 1) return 'just started';
+    if (elapsed.inMinutes < 60) return '${elapsed.inMinutes}m in';
+    return '${elapsed.inHours}h ${elapsed.inMinutes % 60}m in';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: running ? const Color(0xFFE7F0DC) : AppColors.bg,
+        border: Border.all(
+          color: running ? const Color(0xFFBED29B) : AppColors.line,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: running ? const Color(0xFF6B8E3D) : AppColors.ink4,
+              boxShadow: running
+                  ? [BoxShadow(color: const Color(0x386B8E3D), blurRadius: 4)]
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: running ? const Color(0xFF3E5522) : AppColors.ink3,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TextQuote extends StatelessWidget {
+  const _TextQuote({required this.value, required this.placeholder});
+  final String? value;
+  final String placeholder;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 170),
+      child: Text(
+        value != null ? '\u201c${value!}\u201d' : placeholder,
+        style: const TextStyle(
+          fontSize: 13,
+          fontStyle: FontStyle.italic,
+          color: AppColors.ink2,
+        ),
+        textAlign: TextAlign.right,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _DatetimeValue extends StatelessWidget {
+  const _DatetimeValue({required this.value, required this.placeholder});
+  final String? value;
+  final String placeholder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      value ?? placeholder,
+      style: const TextStyle(
+        fontFamily: 'SF Mono',
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: AppColors.ink,
+        letterSpacing: -0.5,
+        height: 1,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Action button
+// ─────────────────────────────────────────────────────────────
+
+class _ActionBtn extends StatelessWidget {
+  const _ActionBtn({
+    required this.tint,
+    required this.child,
+    this.big = false,
+    this.primary = false,
+    this.wide = false,
+    this.onTap,
+  });
+
+  final CounterTint tint;
+  final Widget child;
+  final bool big;
+  final bool primary;
+  final bool wide;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = primary ? tint.bg : AppColors.bg;
+    final fgColor = primary ? tint.ink : AppColors.ink2;
+
+    return Expanded(
+      flex: wide ? 1 : (big ? 1 : 0),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 42,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            border: primary ? null : Border.all(color: AppColors.line),
+          ),
+          child: DefaultTextStyle(
+            style: TextStyle(color: fgColor),
+            child: IconTheme(
+              data: IconThemeData(color: fgColor),
+              child: Center(child: child),
+            ),
           ),
         ),
       ),

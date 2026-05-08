@@ -7,8 +7,10 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/photos_provider.dart';
+import '../../theme/app_theme.dart';
 
-final _dateFormat = DateFormat('dd MMM yyyy, HH:mm');
+final _dateFormat = DateFormat('dd MMM');
+final _timeFormat = DateFormat('HH:mm');
 
 /// Formats a [Duration] as a human-readable string (e.g. "3h 20m", "45s").
 String formatDuration(Duration d) {
@@ -30,8 +32,6 @@ String formatDuration(Duration d) {
 }
 
 /// Formats a numeric diff value with sign, trimming unnecessary decimals.
-/// Returns e.g. "+3", "-1.5", "+0.25". Returns null if either value is null
-/// or the result is not finite (NaN / Infinity).
 String? formatDiff(double? currentNum, double? prevNum) {
   if (currentNum == null || prevNum == null) return null;
   final diff = currentNum - prevNum;
@@ -60,24 +60,6 @@ String _eventTypeLabel(AppLocalizations l10n, EventType type) {
   }
 }
 
-/// Returns the background color for the event type badge.
-Color _eventTypeBadgeColor(EventType type) {
-  switch (type) {
-    case EventType.start:
-      return Colors.green;
-    case EventType.continueEvent:
-      return Colors.blue;
-    case EventType.finish:
-      return Colors.orange;
-    case EventType.value:
-      return Colors.grey;
-  }
-}
-
-/// A tile displaying a single history [CounterEntry].
-///
-/// Shows value, event badge (for event counters), timestamp, duration since
-/// previous entry, numeric diff, and a comment preview.
 class HistoryEntryTile extends ConsumerWidget {
   const HistoryEntryTile({
     super.key,
@@ -89,33 +71,18 @@ class HistoryEntryTile extends ConsumerWidget {
 
   final CounterEntry entry;
   final Counter counter;
-
-  /// The entry immediately before [entry] in time (i.e. the older entry).
   final CounterEntry? previousEntry;
-
-  /// Called when the tile is tapped. If null the tile is not interactive.
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
     final isEventCounter = counter.dataType == DataType.event;
-    final hasComment =
-        entry.comment != null && entry.comment!.isNotEmpty;
+    final hasComment = entry.comment != null && entry.comment!.isNotEmpty;
+    final tint = tintFromBackgroundColor(counter.backgroundColor);
 
-    // Watch photos for this entry
     final photosAsync = ref.watch(photosForEntryProvider(entry.id));
     final photos = photosAsync.valueOrNull ?? [];
-
-    // Duration since previous entry
-    String? durationStr;
-    if (previousEntry != null) {
-      final duration =
-          entry.recordedAt.difference(previousEntry!.recordedAt).abs();
-      durationStr = formatDuration(duration);
-    }
 
     // Numeric diff
     final currentNum = entry.numericValue;
@@ -124,180 +91,220 @@ class HistoryEntryTile extends ConsumerWidget {
     final double? diffValue =
         (currentNum != null && prevNum != null) ? currentNum - prevNum : null;
 
-    // Comment truncated to 50 chars
+    // Comment truncated
     String? commentPreview;
     if (hasComment) {
       final raw = entry.comment!;
-      commentPreview = raw.length > 50 ? '${raw.substring(0, 50)}…' : raw;
+      commentPreview = raw.length > 50 ? '${raw.substring(0, 50)}\u2026' : raw;
     }
 
-    Widget tile = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: ListTile(
-        leading: isEventCounter
-            ? _EventBadgeIcon(eventType: entry.eventType)
-            : const Icon(Icons.radio_button_unchecked, size: 20),
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            entry.value != null
-                ? Text(
-                    entry.value!,
-                    style: textTheme.bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  )
-                : Text(
-                    l10n.noValueEntry,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-            if (isEventCounter) ...[
-              const SizedBox(width: 8),
-              _EventBadge(eventType: entry.eventType, l10n: l10n),
-            ],
-          ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AppColors.line),
+          ),
         ),
-        subtitle: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Timestamp
-            Text(
-              _dateFormat.format(entry.recordedAt),
-              style: textTheme.bodySmall?.copyWith(color: Colors.grey),
-            ),
-
-            // Duration + diff row
-            if (durationStr != null || diffStr != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Row(
-                  children: [
-                    if (durationStr != null)
-                      Text(
-                        '\u23f1 $durationStr ${l10n.sincePreviewLabel}',
-                        style: textTheme.bodySmall
-                            ?.copyWith(color: Colors.grey.shade600),
-                      ),
-                    const Spacer(),
-                    if (diffStr != null && diffValue != null)
-                      Text(
-                        diffStr,
-                        style: textTheme.bodySmall?.copyWith(
-                          color:
-                              diffValue >= 0 ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-            // Comment preview
-            if (commentPreview != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  commentPreview,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
+            // Date column
+            SizedBox(
+              width: 48,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _dateFormat.format(entry.recordedAt),
+                    style: const TextStyle(
+                      fontFamily: 'SF Mono',
+                      fontSize: 13,
+                      color: AppColors.ink,
+                      letterSpacing: -0.3,
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(height: 1),
+                  Text(
+                    _timeFormat.format(entry.recordedAt),
+                    style: const TextStyle(
+                      fontFamily: 'SF Mono',
+                      fontSize: 11,
+                      color: AppColors.ink3,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(width: 14),
 
-            // Photo thumbnail strip
-            if (photos.isNotEmpty)
-              SizedBox(
-                height: 52,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: photos.length,
-                  itemBuilder: (context, i) {
-                    final photo = photos[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 4, top: 4),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image.file(
-                          File(photo.localPath),
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 48,
-                            height: 48,
-                            color: Colors.grey.shade200,
-                            child: const Icon(Icons.broken_image, size: 20),
+            // Value + details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      if (entry.value != null)
+                        Text(
+                          entry.value!,
+                          style: const TextStyle(
+                            fontFamily: 'SF Mono',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.ink,
+                            letterSpacing: -0.5,
+                          ),
+                        )
+                      else
+                        Text(
+                          l10n.noValueEntry,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            color: AppColors.ink3,
                           ),
                         ),
+                      if (diffStr != null && diffValue != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          diffStr,
+                          style: TextStyle(
+                            fontFamily: 'SF Mono',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: diffValue >= 0
+                                ? const Color(0xFF8A5A2B)
+                                : const Color(0xFF3B5238),
+                          ),
+                        ),
+                      ],
+                      if (isEventCounter) ...[
+                        const SizedBox(width: 8),
+                        _EventBadge(
+                          eventType: entry.eventType,
+                          l10n: l10n,
+                        ),
+                      ],
+                      if (photos.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: AppColors.ink4,
+                          ),
+                          child: const Icon(
+                            Icons.image,
+                            size: 10,
+                            color: AppColors.surface,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (commentPreview != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '\u201c$commentPreview\u201d',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.ink2,
+                        fontStyle: FontStyle.italic,
                       ),
-                    );
-                  },
-                ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+
+                  // Photo thumbnails
+                  if (photos.isNotEmpty)
+                    SizedBox(
+                      height: 52,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: photos.length,
+                        itemBuilder: (context, i) {
+                          final photo = photos[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 4, top: 4),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: Image.file(
+                                File(photo.localPath),
+                                width: 48,
+                                height: 48,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 48,
+                                  height: 48,
+                                  color: Colors.grey.shade200,
+                                  child:
+                                      const Icon(Icons.broken_image, size: 20),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
               ),
+            ),
+
+            // Trailing color strip
+            Container(
+              width: 3,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                color: (diffValue != null && diffValue < 0)
+                    ? tint.dot.withAlpha(89)
+                    : (diffValue != null && diffValue > 0)
+                        ? const Color(0xFFC49866).withAlpha(89)
+                        : AppColors.ink4.withAlpha(89),
+              ),
+            ),
           ],
         ),
-        trailing: onTap != null
-            ? const Icon(Icons.edit_outlined, color: Colors.grey)
-            : (hasComment
-                ? const Icon(Icons.comment_outlined, color: Colors.grey)
-                : null),
-        onTap: onTap,
-        isThreeLine: commentPreview != null ||
-            durationStr != null ||
-            diffStr != null,
       ),
     );
-
-    return tile;
   }
 }
 
-/// A small colored icon representing the event type.
-class _EventBadgeIcon extends StatelessWidget {
-  const _EventBadgeIcon({required this.eventType});
-
-  final EventType eventType;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _eventTypeBadgeColor(eventType);
-    IconData icon;
-    switch (eventType) {
-      case EventType.start:
-        icon = Icons.play_circle_outline;
-      case EventType.continueEvent:
-        icon = Icons.redo;
-      case EventType.finish:
-        icon = Icons.check_circle_outline;
-      case EventType.value:
-        icon = Icons.radio_button_checked;
-    }
-    return Icon(icon, color: color, size: 24);
-  }
-}
-
-/// A small rounded chip-style badge showing the event type label.
 class _EventBadge extends StatelessWidget {
   const _EventBadge({required this.eventType, required this.l10n});
 
   final EventType eventType;
   final AppLocalizations l10n;
 
+  Color get _badgeColor {
+    switch (eventType) {
+      case EventType.start:
+        return const Color(0xFF3B5238);
+      case EventType.continueEvent:
+        return const Color(0xFF2E4A66);
+      case EventType.finish:
+        return const Color(0xFF8A5A2B);
+      case EventType.value:
+        return AppColors.ink3;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final color = _eventTypeBadgeColor(eventType);
+    final color = _badgeColor;
     final label = _eventTypeLabel(l10n, eventType);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withAlpha(40),
-        border: Border.all(color: color.withAlpha(120)),
+        color: color.withAlpha(25),
+        border: Border.all(color: color.withAlpha(76)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -305,7 +312,7 @@ class _EventBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: color.withAlpha(220),
+          color: color,
         ),
       ),
     );

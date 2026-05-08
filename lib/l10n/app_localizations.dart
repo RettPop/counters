@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Finish'**
   String get buttonFinish;
 
+  /// No description provided for @buttonReLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-Log'**
+  String get buttonReLog;
+
   /// No description provided for @buttonAddPhoto.
   ///
   /// In en, this message translates to:
