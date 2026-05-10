@@ -134,51 +134,45 @@ class CounterCell extends ConsumerWidget {
     return GestureDetector(
       onTap: () => context.push('/counter/${counter.id}'),
       child: Container(
-        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.line),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top row: name + value ──
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Container(width: 6, color: tint.dot),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: tint.dot,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              counter.name,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.2,
-                                color: AppColors.ink,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16, top: 4),
-                        child: Row(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Top row: name + value ──
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    counter.name,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.2,
+                                      color: AppColors.ink,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Row(
                           children: [
                             Text(
                               _dataTypeLabel(counter.dataType),
@@ -420,7 +414,13 @@ class CounterCell extends ConsumerWidget {
                 }).toList(),
               ),
             ],
-          ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
