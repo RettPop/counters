@@ -200,6 +200,24 @@ abstract class AppLocalizations {
   /// **'Re-Log'**
   String get buttonReLog;
 
+  /// No description provided for @eventPillIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get eventPillIdle;
+
+  /// No description provided for @eventPillJustStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Just started'**
+  String get eventPillJustStarted;
+
+  /// No description provided for @eventPillStartedAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {duration} ago'**
+  String eventPillStartedAgo(String duration);
+
   /// No description provided for @buttonAddPhoto.
   ///
   /// In en, this message translates to:

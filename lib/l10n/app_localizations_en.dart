@@ -60,6 +60,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buttonReLog => 'Re-Log';
 
   @override
+  String get eventPillIdle => 'Idle';
+
+  @override
+  String get eventPillJustStarted => 'Just started';
+
+  @override
+  String eventPillStartedAgo(String duration) {
+    return 'Started $duration ago';
+  }
+
+  @override
   String get buttonAddPhoto => 'Add photo';
 
   @override

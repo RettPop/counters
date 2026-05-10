@@ -91,6 +91,11 @@ class HistoryEntryTile extends ConsumerWidget {
     final double? diffValue =
         (currentNum != null && prevNum != null) ? currentNum - prevNum : null;
 
+    // Time gap since previous entry
+    final String? gapStr = previousEntry == null
+        ? null
+        : formatDuration(entry.recordedAt.difference(previousEntry!.recordedAt));
+
     // Comment truncated
     String? commentPreview;
     if (hasComment) {
@@ -202,6 +207,17 @@ class HistoryEntryTile extends ConsumerWidget {
                             Icons.image,
                             size: 10,
                             color: AppColors.surface,
+                          ),
+                        ),
+                      ],
+                      if (gapStr != null) ...[
+                        const Spacer(),
+                        Text(
+                          '+$gapStr',
+                          style: const TextStyle(
+                            fontFamily: 'SF Mono',
+                            fontSize: 11,
+                            color: AppColors.ink3,
                           ),
                         ),
                       ],

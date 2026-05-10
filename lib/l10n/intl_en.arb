@@ -52,6 +52,19 @@
   "buttonReLog": "Re-Log",
   "@buttonReLog": {},
 
+  "eventPillIdle": "Idle",
+  "@eventPillIdle": {},
+
+  "eventPillJustStarted": "Just started",
+  "@eventPillJustStarted": {},
+
+  "eventPillStartedAgo": "Started {duration} ago",
+  "@eventPillStartedAgo": {
+    "placeholders": {
+      "duration": {"type": "String"}
+    }
+  },
+
   "buttonAddPhoto": "Add photo",
   "@buttonAddPhoto": {},
 

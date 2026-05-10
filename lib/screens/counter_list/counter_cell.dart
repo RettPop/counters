@@ -24,11 +24,9 @@ String _relTime(DateTime dt) {
   if (diff < 3600) return '${diff ~/ 60}m ago';
   if (diff < 86400) return '${diff ~/ 3600}h ago';
   if (diff < 86400 * 7) return '${diff ~/ 86400}d ago';
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-  return '${dt.day} ${months[dt.month - 1]}';
+  if (diff < 86400 * 30) return '${diff ~/ (86400 * 7)}w ago';
+  if (diff < 86400 * 365) return '${diff ~/ (86400 * 30)}mo ago';
+  return '${diff ~/ (86400 * 365)}y ago';
 }
 
 String _dataTypeLabel(DataType type) {
@@ -459,17 +457,28 @@ class _EventPill extends StatelessWidget {
   final bool running;
   final CounterEntry? lastEntry;
 
-  String get _label {
-    if (!running) return 'Idle';
-    if (lastEntry == null) return 'Idle';
+  String _buildLabel(AppLocalizations l10n) {
+    if (!running || lastEntry == null) return l10n.eventPillIdle;
     final elapsed = DateTime.now().difference(lastEntry!.recordedAt);
-    if (elapsed.inMinutes < 1) return 'just started';
-    if (elapsed.inMinutes < 60) return '${elapsed.inMinutes}m in';
-    return '${elapsed.inHours}h ${elapsed.inMinutes % 60}m in';
+    if (elapsed.inMinutes < 1) return l10n.eventPillJustStarted;
+    final h = elapsed.inHours;
+    final m = elapsed.inMinutes % 60;
+    final String duration;
+    if (h < 1) {
+      duration = '${m}m';
+    } else if (h < 24) {
+      duration = m > 0 ? '${h}h ${m}m' : '${h}h';
+    } else {
+      final days = elapsed.inDays;
+      final remH = h % 24;
+      duration = remH > 0 ? '${days}d ${remH}h' : '${days}d';
+    }
+    return l10n.eventPillStartedAgo(duration);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -494,13 +503,17 @@ class _EventPill extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            _label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: running ? const Color(0xFF3E5522) : AppColors.ink3,
-              letterSpacing: 0.3,
+          Flexible(
+            child: Text(
+              _buildLabel(l10n),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: running ? const Color(0xFF3E5522) : AppColors.ink3,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
         ],

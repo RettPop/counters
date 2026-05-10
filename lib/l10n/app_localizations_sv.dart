@@ -60,6 +60,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String get buttonReLog => 'Logga igen';
 
   @override
+  String get eventPillIdle => 'Vilande';
+
+  @override
+  String get eventPillJustStarted => 'Just startad';
+
+  @override
+  String eventPillStartedAgo(String duration) {
+    return 'Startade för $duration sedan';
+  }
+
+  @override
   String get buttonAddPhoto => 'Lägg till foto';
 
   @override
