@@ -153,6 +153,13 @@ class HistoryEntryTile extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
+                      if (isEventCounter) ...[
+                        _EventBadge(
+                          eventType: entry.eventType,
+                          l10n: l10n,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       if (entry.value != null)
                         Text(
                           entry.value!,
@@ -185,13 +192,6 @@ class HistoryEntryTile extends ConsumerWidget {
                                 ? const Color(0xFF8A5A2B)
                                 : const Color(0xFF3B5238),
                           ),
-                        ),
-                      ],
-                      if (isEventCounter) ...[
-                        const SizedBox(width: 8),
-                        _EventBadge(
-                          eventType: entry.eventType,
-                          l10n: l10n,
                         ),
                       ],
                       if (photos.isNotEmpty) ...[
